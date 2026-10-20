@@ -54,10 +54,11 @@ Fotoğraf akışı: `POST /photos/upload-url` → telefon dosyayı imzalı adres
 | `POST/GET /conversations` · `GET/POST /conversations/{id}/messages` · `POST /conversations/{id}/read` | Aynı ilana ikinci başlatma aynı konuşmayı döner; `clientId` ile tekrar gönderim çift kayıt açmaz; konumu yalnızca ilan sahibi paylaşır; dakikada 20 mesaj, günde 20 yeni konuşma |
 | `POST /plates/{id}/handover-confirm` | Teslim konuşmasının arayan tarafı 7 gün içinde bir kez; "hayır" yönetici incelemesine düşer |
 | `POST /users/{id}/block` | İki yönde de yazışmayı kapatır |
+| `GET/POST /me/alerts` · `DELETE /me/alerts/{id}` | Plaka alarmı: 90 gün geçerli, aynı plakaya yeniden kurmak süreyi yeniler, en fazla 10. Doğrulanmış e-posta gerekir. Aynı plakaya ilan yayına girince (resmî plakada yönetici onayıyla) alarm sahibine bir kez e-posta gider; kendi ilanına ve "plaka alarmı" bildirimi kapalı olana gitmez. Push (FCM) gelince oraya da gidecek |
 | `POST /reports` | İlan, kullanıcı veya konuşma şikâyeti; aynı şeye ikinci kez 409; günde 20. Bir ilan 3 farklı kullanıcıdan açık şikâyet alınca yönetici kararına kadar gizlenir (eşik `settings.report_hide_threshold`) |
 | `wss://…/api/v1/ws` | İlk mesaj `{"type":"auth","token":"<access JWT>"}`; yanıt `{"type":"ready"}`. Olaylar: `message.new`, `message.read`. Kopunca `GET …/messages?after=<sonId>` ile eşitlenir |
 
-Zamanlanmış işler (BullMQ, Türkiye saati, `WORKER_ENABLED=true` olan kopyada): `expire-listings` saatlik, `expiry-reminders` 09:00 (süre bitmeden 3 gün önce tek e-posta), `retention-purge` 03:00 (90 günü dolan kesin konumlar, silinen hesapların ilanları, eski token'lar, 2 yılı geçen denetim kayıtları), `orphan-photos` 03:30 (24 saatte ilana bağlanmayan fotoğraflar).
+Zamanlanmış işler (BullMQ, Türkiye saati, `WORKER_ENABLED=true` olan kopyada): `expire-listings` saatlik, `expiry-reminders` 09:00 (süre bitmeden 3 gün önce tek e-posta), `retention-purge` 03:00 (90 günü dolan kesin konumlar, silinen hesapların ilanları, eski token'lar, 2 yılı geçen denetim kayıtları, süresi dolan plaka alarmları), `orphan-photos` 03:30 (24 saatte ilana bağlanmayan fotoğraflar).
 
 ### Yönetici uçları (`/api/v1/admin`)
 
@@ -75,7 +76,7 @@ Hepsi yönetici rolü **ve** MFA'lı oturum ister (yoksa 403 `ADMIN_ONLY` / `ADM
 
 Panel arayüzü ayrı bir web işi; ayrı alt alan adında (`admin.<alan-adı>`) yayınlanması ve `CORS_ORIGINS`'e eklenmesi yeterli.
 
-Henüz yok: push bildirimi (FCM), Google/Apple girişi, cihaz token'ı (`/me/devices`), sızmış şifre kontrolü, plaka alarmı.
+Henüz yok: push bildirimi (FCM), Google/Apple girişi, cihaz token'ı (`/me/devices`), sızmış şifre kontrolü.
 
 ## Yapı
 

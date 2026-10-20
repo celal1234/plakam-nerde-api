@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { envSchema } from './config/env.validation';
 import { dataSourceOptions } from './database/data-source';
 import { AdminModule } from './admin/admin.module';
+import { AlertsModule } from './alerts/alerts.module';
 import { AuthModule } from './auth/auth.module';
 import { CryptoModule } from './common/crypto/crypto.module';
 import { RateLimitModule } from './common/rate-limit/rate-limit.module';
@@ -42,6 +43,7 @@ import { UsersModule } from './users/users.module';
     RealtimeModule,
     UsersModule,
     PhotosModule,
+    AlertsModule,
     ListingsModule,
     ConversationsModule,
     MaintenanceModule,

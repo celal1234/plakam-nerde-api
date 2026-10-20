@@ -3,6 +3,7 @@ import { AuthTokens1760950800000 } from './1760950800000-AuthTokens';
 import { ListingsFoundAtIstanbul1760954400000 } from './1760954400000-ListingsFoundAtIstanbul';
 import { ListingLifecycle1760958000000 } from './1760958000000-ListingLifecycle';
 import { AdminModeration1760961600000 } from './1760961600000-AdminModeration';
+import { PlateAlertDeliveries1760965200000 } from './1760965200000-PlateAlertDeliveries';
 
 // Yeni migration'lar buraya sırayla eklenir; dosya taraması kullanılmaz.
 export const migrations = [
@@ -11,4 +12,5 @@ export const migrations = [
   ListingsFoundAtIstanbul1760954400000,
   ListingLifecycle1760958000000,
   AdminModeration1760961600000,
+  PlateAlertDeliveries1760965200000,
 ];

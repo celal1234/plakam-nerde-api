@@ -1,6 +1,7 @@
 import { HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { Redis } from 'ioredis';
 import { DataSource, EntityManager } from 'typeorm';
+import { AlertsService } from '../alerts/alerts.service';
 import { AuthUser } from '../auth/auth.decorators';
 import { AuthService, TokenPair } from '../auth/auth.service';
 import { audit } from '../common/audit/audit';
@@ -49,6 +50,7 @@ export class AdminService {
     private readonly mail: MailService,
     private readonly realtime: RealtimeService,
     private readonly storage: StorageService,
+    private readonly alerts: AlertsService,
   ) {}
 
   // ---- MFA (FR-057) ----
@@ -166,6 +168,7 @@ export class AdminService {
       await audit(tx, { actorId: actor.user.id, action: 'admin.listing.approve', targetType: 'listing', targetId: id, ip: actor.ip });
       return row;
     });
+    await this.alerts.listingPublished(id);
     await this.notify(owner.email, {
       subject: 'İlanınız yayında',
       text: `${owner.plate_display} plakalı ilanınız incelendi ve yayına alındı.`,
