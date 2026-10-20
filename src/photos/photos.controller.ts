@@ -6,7 +6,9 @@ import { ApiError } from '../common/errors/api-error';
 import { RateLimiter } from '../common/rate-limit/rate-limiter.service';
 import { StorageService } from '../storage/storage.service';
 
-export const PHOTO_MIMES = ['image/jpeg', 'image/png', 'image/heic'] as const;
+// HEIC kabul edilmez: sunucudaki görüntü kütüphanesi HEVC çözemiyor. Flutter tarafı iOS fotoğraflarını
+// yüklemeden önce JPEG'e çevirir (image_picker `imageQuality` verildiğinde zaten JPEG üretir).
+export const PHOTO_MIMES = ['image/jpeg', 'image/png'] as const;
 const MAX_BYTES = 10 * 1024 * 1024;
 
 export class UploadUrlDto {

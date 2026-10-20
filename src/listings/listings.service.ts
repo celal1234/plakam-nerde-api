@@ -1,9 +1,11 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { HttpStatus, Inject, Injectable } from '@nestjs/common';
+import { Queue } from 'bullmq';
 import { DataSource, EntityManager } from 'typeorm';
 import { AuthUser } from '../auth/auth.decorators';
 import { ApiError } from '../common/errors/api-error';
 import { normalizePlate } from '../common/plate/plate';
 import { RateLimiter } from '../common/rate-limit/rate-limiter.service';
+import { PHOTOS, PhotoJob } from '../queue/queue.module';
 import { StorageService } from '../storage/storage.service';
 import { CheckDuplicateDto, CreateListingDto, LocationDto, UpdateListingDto } from './listings.dto';
 
@@ -44,7 +46,7 @@ interface DetailRow extends CardRow {
   extended: boolean;
   version: number;
   ownerDisplayName: string;
-  photoKeys: (string | null)[];
+  photoKeys: string[];
 }
 
 interface OwnedRow {
@@ -65,6 +67,7 @@ export class ListingsService {
     private readonly db: DataSource,
     private readonly limiter: RateLimiter,
     private readonly storage: StorageService,
+    @Inject(PHOTOS) private readonly photoQueue: Queue<PhotoJob>,
   ) {}
 
   async search(q: string, ip: string) {
@@ -167,6 +170,9 @@ export class ListingsService {
       );
       return { id, duplicates };
     });
+
+    // İşleme ilan yayınlandıktan sonra başlar; jobId fotoğraf kimliği olduğu için aynı fotoğraf iki kez kuyruğa girmez.
+    await this.photoQueue.addBulk(dto.photoIds.map((photoId) => ({ name: 'process', data: { photoId }, opts: { jobId: photoId } })));
 
     const warnings: string[] = [];
     if (!plate.formatOk) warnings.push('PLATE_FORMAT');
@@ -273,7 +279,7 @@ export class ListingsService {
               l.expires_at AS "expiresAt", l.created_at AS "createdAt", l.is_official_plate AS "isOfficialPlate",
               l.plate_format_ok AS "plateFormatOk", l.handover_confirmed AS "handoverConfirmed",
               l.extended_at IS NOT NULL AS extended, l.version, u.display_name AS "ownerDisplayName",
-              ARRAY(SELECT p.thumb_key FROM photos p WHERE p.listing_id = l.id ORDER BY p.position) AS "photoKeys"
+              ARRAY(SELECT p.storage_key FROM photos p WHERE p.listing_id = l.id AND p.thumb_key IS NOT NULL ORDER BY p.position) AS "photoKeys"
        FROM listings l JOIN users u ON u.id = l.owner_id
        WHERE l.id = $1 ${publicOnly ? `AND l.status NOT IN ('pending', 'removed') AND NOT l.hidden_by_reports` : ''}`,
       [id],
@@ -334,7 +340,7 @@ export class ListingsService {
       foundAt: r.foundAt,
       city: r.city,
       district: r.district,
-      // Küçük resimler EXIF temizleme işinden sonra oluşur; o zamana kadar null.
+      // Küçük resim fotoğraf işlenince oluşur; o zamana kadar null.
       thumbUrl: r.thumbKey ? await this.storage.presignGet(r.thumbKey) : null,
       approxCenter: { lat: Number(r.lat), lng: Number(r.lng) },
       approxRadiusM: r.approxRadiusM,
@@ -352,8 +358,8 @@ export class ListingsService {
       extended: r.extended,
       version: r.version,
       owner: { displayName: r.ownerDisplayName },
-      photoUrls: await Promise.all(r.photoKeys.filter((k): k is string => !!k).map((k) => this.storage.presignGet(k))),
-      photoCount: r.photoKeys.length,
+      // Yalnızca işlenmiş (EXIF'i silinmiş) fotoğraflar; işlenmemiş orijinal asla dışarı verilmez.
+      photoUrls: await Promise.all(r.photoKeys.map((k) => this.storage.presignGet(k))),
     };
   }
 

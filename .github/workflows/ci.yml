@@ -16,6 +16,10 @@ jobs:
       redis:
         image: redis:7-alpine
         ports: ["6379:6379"]
+      # S3 uyumlu sahte depolama; e2e testleri imzalı adreslerle gerçekten yükleme yapar.
+      s3:
+        image: motoserver/moto:5.2.3
+        ports: ["3900:5000"]
     env:
       DATABASE_URL: postgres://plakam:plakam@localhost:5432/plakam
       REDIS_URL: redis://localhost:6379

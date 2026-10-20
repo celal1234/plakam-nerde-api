@@ -19,5 +19,7 @@ export const envSchema = Joi.object({
   S3_BUCKET: Joi.string().default('plakam-photos'),
   S3_ACCESS_KEY: Joi.string().allow('').optional(),
   S3_SECRET_KEY: Joi.string().allow('').optional(),
+  // Arka plan işleri (fotoğraf işleme) bu süreçte de çalışsın mı; ileride ayrı bir worker konteynerine taşınabilir.
+  WORKER_ENABLED: Joi.boolean().default(true),
   MAIL_FROM: Joi.string().default('Plakam Nerde? <no-reply@localhost>'),
 });
