@@ -5,7 +5,15 @@ import { ApiError } from '../common/errors/api-error';
 import { assertCanWrite } from '../common/restriction';
 import { RateLimiter } from '../common/rate-limit/rate-limiter.service';
 import { RealtimeService } from '../realtime/realtime.service';
-import { MessagesQueryDto, SendMessageDto, StartConversationDto } from './conversations.dto';
+import {
+  ConversationSummary,
+  Message,
+  MessagesQueryDto,
+  ReadReceipt,
+  SendMessageDto,
+  StartConversationDto,
+  StartedConversation,
+} from './conversations.dto';
 
 const MESSAGE_COLUMNS = `
   m.id::text AS id, m.conversation_id AS "conversationId", m.sender_id AS "senderId", m.kind, m.body,
@@ -22,18 +30,6 @@ interface ConversationRow {
   listing_status: string;
 }
 
-export interface Message {
-  id: string;
-  conversationId: string;
-  senderId: string | null;
-  kind: 'text' | 'location' | 'system';
-  body: string | null;
-  point: { lat: number; lng: number } | null;
-  clientId: string;
-  createdAt: Date;
-  readAt: Date | null;
-}
-
 const forbidden = () =>
   new ApiError(HttpStatus.FORBIDDEN, 'CONVERSATION_FORBIDDEN', 'Bu konuşmaya erişiminiz yok.');
 
@@ -46,7 +42,7 @@ export class ConversationsService {
   ) {}
 
   // AC-13: oturumsuz kullanıcı buraya ulaşamaz (401), istemci girişe yönlendirir.
-  async start(user: AuthUser, dto: StartConversationDto) {
+  async start(user: AuthUser, dto: StartConversationDto): Promise<StartedConversation> {
     await assertCanWrite(this.db, user.id);
     const [listing]: { owner_id: string; active: boolean }[] = await this.db.query(
       `SELECT owner_id, (status = 'active' AND expires_at > now() AND NOT hidden_by_reports) AS active
@@ -87,7 +83,7 @@ export class ConversationsService {
     return { conversation: await this.summary(user.id, conversationId), message };
   }
 
-  async list(user: AuthUser) {
+  async list(user: AuthUser): Promise<ConversationSummary[]> {
     return this.db.query(
       `${this.summarySql('(c.owner_id = $1 OR c.seeker_id = $1)')}
        ORDER BY COALESCE(c.last_message_at, c.created_at) DESC LIMIT 100`,
@@ -133,7 +129,7 @@ export class ConversationsService {
     return message;
   }
 
-  async markRead(user: AuthUser, conversationId: string): Promise<{ upToId: string | null }> {
+  async markRead(user: AuthUser, conversationId: string): Promise<ReadReceipt> {
     const conv = await this.loadAsParty(this.db.manager, user.id, conversationId);
     // Sorgu SELECT ile bittiği için TypeORM düz satır dizisi döndürür.
     const [row]: { max: string | null }[] = await this.db.query(
@@ -222,7 +218,7 @@ export class ConversationsService {
     if (row) throw new ApiError(HttpStatus.FORBIDDEN, 'USER_BLOCKED', 'Bu kullanıcıyla mesajlaşamazsınız.');
   }
 
-  private async summary(userId: string, conversationId: string) {
+  private async summary(userId: string, conversationId: string): Promise<ConversationSummary> {
     const [row] = await this.db.query(`${this.summarySql('c.id = $2 AND (c.owner_id = $1 OR c.seeker_id = $1)')}`, [
       userId,
       conversationId,

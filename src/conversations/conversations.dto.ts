@@ -1,5 +1,7 @@
 import { Transform, Type } from 'class-transformer';
 import { IsIn, IsInt, IsLatitude, IsLongitude, IsNotEmpty, IsOptional, IsString, IsUUID, Max, MaxLength, Min, ValidateIf, ValidateNested } from 'class-validator';
+import { LatLng, UserRef } from '../common/dto/shared.dto';
+import type { ListingStatus } from '../listings/listings.dto';
 
 const trim = ({ value }: { value: unknown }) => (typeof value === 'string' ? value.trim() : value);
 
@@ -28,4 +30,52 @@ export class MessagesQueryDto {
   // `before`: geçmişe doğru sayfalama.
   @IsOptional() @Type(() => Number) @IsInt() @Min(1) before?: number;
   @IsOptional() @Type(() => Number) @IsInt() @Min(1) @Max(50) limit?: number;
+}
+
+// ---- Yanıtlar ----
+
+export class Message {
+  // Artan sayısal kimlik (metin olarak); `after`/`before` sayfalaması bununla yapılır.
+  id: string;
+  conversationId: string;
+  // Sistem mesajlarında null.
+  senderId: string | null;
+  kind: 'text' | 'location' | 'system';
+  body: string | null;
+  point: LatLng | null;
+  clientId: string;
+  createdAt: Date;
+  readAt: Date | null;
+}
+
+export class LastMessage {
+  kind: 'text' | 'location' | 'system';
+  // İlk 120 karakter.
+  body: string | null;
+  senderId: string | null;
+  createdAt: string;
+}
+
+export class ConversationSummary {
+  id: string;
+  listingId: string;
+  plateDisplay: string;
+  listingStatus: ListingStatus;
+  // İsteği yapan kullanıcının bu konuşmadaki rolü.
+  role: 'owner' | 'seeker';
+  otherUser: UserRef;
+  readOnly: boolean;
+  lastMessageAt: Date | null;
+  lastMessage: LastMessage | null;
+  unread: number;
+}
+
+export class StartedConversation {
+  conversation: ConversationSummary;
+  message: Message;
+}
+
+export class ReadReceipt {
+  // Okundu işaretlenen en son mesaj; yeni okunan yoksa null.
+  upToId: string | null;
 }

@@ -7,20 +7,15 @@ import { ApiError } from '../common/errors/api-error';
 import { RateLimiter } from '../common/rate-limit/rate-limiter.service';
 import { MailService } from '../mail/mail.service';
 import { AuthUser } from './auth.decorators';
-import { LoginDto, RegisterDto } from './auth.dto';
+import { LoginDto, RegisterDto, TokenPair } from './auth.dto';
 import { randomToken, sha256 } from './crypto';
 
 const ACCESS_TTL = '15m';
-const REFRESH_TTL_DAYS = 30;
+export const REFRESH_TTL_DAYS = 30;
 const VERIFY_TTL_HOURS = 24;
 const RESET_TTL_HOURS = 1;
 // Yönetici MFA doğrulaması bu süre boyunca refresh ile taşınır; sonra panel kodu yeniden ister (FR-057).
 const MFA_SESSION_HOURS = 12;
-
-export interface TokenPair {
-  accessToken: string;
-  refreshToken: string;
-}
 
 interface RefreshRow {
   user_id: string;
@@ -123,8 +118,8 @@ export class AuthService {
     return this.issueTokens(this.db.manager, user, crypto.randomUUID());
   }
 
-  async refresh(refreshToken: string): Promise<TokenPair> {
-    const [id, secret] = refreshToken.split('.');
+  async refresh(refreshToken: string | undefined): Promise<TokenPair> {
+    const [id, secret] = (refreshToken ?? '').split('.');
     if (!id || !secret || !/^[0-9a-f-]{36}$/.test(id)) throw invalidSession();
 
     let reusedFamily: string | undefined;
@@ -158,8 +153,8 @@ export class AuthService {
     }
   }
 
-  async logout(refreshToken: string): Promise<void> {
-    const [id, secret] = refreshToken.split('.');
+  async logout(refreshToken: string | undefined): Promise<void> {
+    const [id, secret] = (refreshToken ?? '').split('.');
     if (!id || !secret || !/^[0-9a-f-]{36}$/.test(id)) return;
     const [row]: { family_id: string; token_hash: Buffer }[] = await this.db.query(
       `SELECT family_id, token_hash FROM refresh_tokens WHERE id = $1`,

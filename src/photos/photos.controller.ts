@@ -1,20 +1,12 @@
 import { Body, Controller, HttpStatus, Post } from '@nestjs/common';
-import { IsIn, IsInt, Max, Min } from 'class-validator';
 import { DataSource } from 'typeorm';
 import { AuthUser, CurrentUser, RequireVerifiedEmail } from '../auth/auth.decorators';
 import { ApiError } from '../common/errors/api-error';
 import { RateLimiter } from '../common/rate-limit/rate-limiter.service';
 import { StorageService } from '../storage/storage.service';
+import { UploadUrl, UploadUrlDto } from './photos.dto';
 
-// HEIC kabul edilmez: sunucudaki görüntü kütüphanesi HEVC çözemiyor. Flutter tarafı iOS fotoğraflarını
-// yüklemeden önce JPEG'e çevirir (image_picker `imageQuality` verildiğinde zaten JPEG üretir).
-export const PHOTO_MIMES = ['image/jpeg', 'image/png'] as const;
 const MAX_BYTES = 10 * 1024 * 1024;
-
-export class UploadUrlDto {
-  @IsIn(PHOTO_MIMES as unknown as string[]) mime: string;
-  @IsInt() @Min(1) @Max(Number.MAX_SAFE_INTEGER) bytes: number;
-}
 
 @Controller('photos')
 export class PhotosController {
@@ -28,7 +20,7 @@ export class PhotosController {
   // Sahipsiz kalanları `orphan-photos` işi temizleyecek (BR-014).
   @Post('upload-url')
   @RequireVerifiedEmail()
-  async uploadUrl(@CurrentUser() user: AuthUser, @Body() dto: UploadUrlDto) {
+  async uploadUrl(@CurrentUser() user: AuthUser, @Body() dto: UploadUrlDto): Promise<UploadUrl> {
     if (dto.bytes > MAX_BYTES) {
       throw new ApiError(HttpStatus.BAD_REQUEST, 'PHOTO_TOO_LARGE', 'Fotoğraf en fazla 10 MB olabilir.');
     }

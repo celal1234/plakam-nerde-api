@@ -3,7 +3,8 @@ import { Redis } from 'ioredis';
 import { DataSource, EntityManager } from 'typeorm';
 import { AlertsService } from '../alerts/alerts.service';
 import { AuthUser } from '../auth/auth.decorators';
-import { AuthService, TokenPair } from '../auth/auth.service';
+import { TokenPair } from '../auth/auth.dto';
+import { AuthService } from '../auth/auth.service';
 import { audit } from '../common/audit/audit';
 import { DataCipher } from '../common/crypto/data-cipher';
 import { ApiError } from '../common/errors/api-error';
@@ -13,7 +14,24 @@ import { MailMessage, MailService } from '../mail/mail.service';
 import { RealtimeService } from '../realtime/realtime.service';
 import { REDIS } from '../redis/redis.module';
 import { StorageService } from '../storage/storage.service';
-import { AdminListingsQueryDto, AdminReportsQueryDto, ResolveReportDto } from './admin.dto';
+import { LatLng } from '../common/dto/shared.dto';
+import type { UserStatus } from '../users/users.dto';
+import {
+  AdminListing,
+  AdminListingDetail,
+  AdminListingPage,
+  AdminListingsQueryDto,
+  AdminListingStatus,
+  AdminPhone,
+  AdminReport,
+  AdminReportPage,
+  AdminReportsQueryDto,
+  Metrics,
+  MfaSetup,
+  ResolvedReport,
+  ResolveReportDto,
+  UserRestriction,
+} from './admin.dto';
 import { generateSecret, otpauthUrl, TOTP_STEP_SEC, verifyTotp } from './totp';
 
 const EFFECTIVE_STATUS = `CASE WHEN l.status = 'active' AND l.expires_at <= now() THEN 'expired' ELSE l.status::text END`;
@@ -55,7 +73,7 @@ export class AdminService {
 
   // ---- MFA (FR-057) ----
 
-  async mfaSetup(user: AuthUser) {
+  async mfaSetup(user: AuthUser): Promise<MfaSetup> {
     const [row]: { email: string; enabled: boolean }[] = await this.db.query(
       `SELECT email, mfa_secret_enc IS NOT NULL AS enabled FROM users WHERE id = $1`,
       [user.id],
@@ -98,7 +116,7 @@ export class AdminService {
 
   // ---- İlanlar (FR-052, FR-073, FR-046) ----
 
-  async listings(q: AdminListingsQueryDto) {
+  async listings(q: AdminListingsQueryDto): Promise<AdminListingPage> {
     const where: string[] = [];
     const params: unknown[] = [];
     const add = (sql: string, value: unknown) => {
@@ -130,7 +148,7 @@ export class AdminService {
     };
   }
 
-  async listingDetail(id: string) {
+  async listingDetail(id: string): Promise<AdminListingDetail> {
     const [row]: (AdminListingRow & { photoKeys: string[] })[] = await this.db.query(
       `SELECT ${ADMIN_LISTING_COLUMNS},
               ARRAY(SELECT p.storage_key FROM photos p WHERE p.listing_id = l.id AND p.thumb_key IS NOT NULL ORDER BY p.position) AS "photoKeys"
@@ -153,7 +171,7 @@ export class AdminService {
     };
   }
 
-  async approve(actor: Actor, id: string) {
+  async approve(actor: Actor, id: string): Promise<AdminListingStatus> {
     const owner = await this.db.transaction(async (tx) => {
       const row = await this.lockListing(tx, id);
       if (row.status !== 'pending') throw wrongState();
@@ -176,7 +194,7 @@ export class AdminService {
     return { id, status: 'active' };
   }
 
-  async reject(actor: Actor, id: string, reason: string) {
+  async reject(actor: Actor, id: string, reason: string): Promise<AdminListingStatus> {
     const owner = await this.db.transaction(async (tx) => {
       const row = await this.lockListing(tx, id);
       if (row.status !== 'pending') throw wrongState();
@@ -198,7 +216,7 @@ export class AdminService {
     return { id, status: 'removed' };
   }
 
-  async remove(actor: Actor, id: string, reason: string) {
+  async remove(actor: Actor, id: string, reason: string): Promise<AdminListingStatus> {
     const { row, parties } = await this.db.transaction((tx) => this.removeInTx(tx, actor, id, reason));
     await this.afterRemove(id, row, parties, reason);
     return { id, status: 'removed' };
@@ -206,8 +224,8 @@ export class AdminService {
 
   // ---- Şikâyetler (FR-053) ----
 
-  async reports(q: AdminReportsQueryDto) {
-    const rows: Record<string, unknown>[] = await this.db.query(
+  async reports(q: AdminReportsQueryDto): Promise<AdminReportPage> {
+    const rows: (AdminReport & { total: number })[] = await this.db.query(
       `SELECT r.id, r.reason, r.note, r.status, r.created_at AS "createdAt", r.resolved_at AS "resolvedAt",
               json_build_object('id', ru.id, 'displayName', ru.display_name) AS reporter,
               CASE WHEN l.id IS NULL THEN NULL ELSE json_build_object(
@@ -227,15 +245,15 @@ export class AdminService {
        LIMIT $2 OFFSET $3`,
       [q.status, q.limit, q.offset],
     );
-    return { total: (rows[0]?.total as number) ?? 0, items: rows.map(({ total: _, ...r }) => r) };
+    return { total: rows[0]?.total ?? 0, items: rows.map(({ total: _, ...r }) => r) };
   }
 
-  async resolveReport(actor: Actor, id: string, dto: ResolveReportDto) {
+  async resolveReport(actor: Actor, id: string, dto: ResolveReportDto): Promise<ResolvedReport> {
     let removed: Awaited<ReturnType<AdminService['removeInTx']>> | undefined;
     let removedReason = '';
     let restricted: { email: string | null; until: Date | null } | undefined;
 
-    const result = await this.db.transaction(async (tx) => {
+    const result = await this.db.transaction(async (tx): Promise<ResolvedReport> => {
       const [report]: { id: string; status: string; listing_id: string | null; target_user_id: string | null; reason: string }[] =
         await tx.query(`SELECT id, status, listing_id, target_user_id, reason FROM reports WHERE id = $1 FOR UPDATE`, [id]);
       if (!report) throw new ApiError(HttpStatus.NOT_FOUND, 'REPORT_NOT_FOUND', 'Şikâyet bulunamadı.');
@@ -286,13 +304,13 @@ export class AdminService {
 
   // ---- Kullanıcılar (FR-055) ----
 
-  async restrict(actor: Actor, userId: string, days: number | null, note?: string) {
+  async restrict(actor: Actor, userId: string, days: number | null, note?: string): Promise<UserRestriction> {
     const r = await this.db.transaction((tx) => this.restrictInTx(tx, actor, userId, days, note));
     await this.notifyRestricted(r);
     return { id: userId, status: 'restricted', restrictedUntil: r.until };
   }
 
-  async unrestrict(actor: Actor, userId: string) {
+  async unrestrict(actor: Actor, userId: string): Promise<UserRestriction> {
     await this.db.transaction(async (tx) => {
       const [[row]]: [{ id: string }[], number] = await tx.query(
         `UPDATE users SET status = 'active', restricted_until = NULL
@@ -307,7 +325,7 @@ export class AdminService {
 
   // ---- Kişisel veri görüntüleme (FR-056): her çağrı denetim kaydına yazılır ----
 
-  async exactLocation(actor: Actor, id: string) {
+  async exactLocation(actor: Actor, id: string): Promise<LatLng> {
     return this.db.transaction(async (tx) => {
       const [row]: { lat: number; lng: number }[] = await tx.query(
         `SELECT ST_Y(exact_point::geometry) AS lat, ST_X(exact_point::geometry) AS lng
@@ -320,7 +338,7 @@ export class AdminService {
     });
   }
 
-  async phone(actor: Actor, userId: string) {
+  async phone(actor: Actor, userId: string): Promise<AdminPhone> {
     return this.db.transaction(async (tx) => {
       const [user] = await tx.query(`SELECT 1 FROM users WHERE id = $1`, [userId]);
       if (!user) throw userNotFound();
@@ -334,8 +352,8 @@ export class AdminService {
 
   // ---- Metrikler (FR-074) ----
 
-  async metrics(from?: string, to?: string) {
-    const days: MetricDay[] = await this.db.query(
+  async metrics(from?: string, to?: string): Promise<Metrics> {
+    const days: MetricRow[] = await this.db.query(
       `WITH bounds AS (
          SELECT COALESCE($2::date, (now() AT TIME ZONE 'Europe/Istanbul')::date) AS hi,
                 COALESCE($1::date, COALESCE($2::date, (now() AT TIME ZONE 'Europe/Istanbul')::date) - 29) AS lo
@@ -355,7 +373,7 @@ export class AdminService {
         fields: { from: ['range_too_large'] },
       });
     }
-    const sum = (k: keyof Omit<MetricDay, 'day'>) => days.reduce((a, d) => a + d[k], 0);
+    const sum = (k: keyof Omit<MetricRow, 'day'>) => days.reduce((a, d) => a + d[k], 0);
     const searches = sum('searches');
     const hits = sum('searchesWithResult');
     return {
@@ -486,7 +504,7 @@ export class AdminService {
     if (email) await this.mail.send({ to: email, ...m });
   }
 
-  private async toAdminListing(r: AdminListingRow) {
+  private async toAdminListing(r: AdminListingRow): Promise<AdminListing> {
     const { thumbKey, ownerId, ownerDisplayName, ownerStatus, lat, lng, ...rest } = r;
     return {
       ...rest,
@@ -507,15 +525,13 @@ const ADMIN_LISTING_COLUMNS = `
   (SELECT count(DISTINCT r.reporter_id)::int FROM reports r WHERE r.listing_id = l.id AND r.status = 'open') AS "openReports",
   (SELECT p.thumb_key FROM photos p WHERE p.listing_id = l.id ORDER BY p.position LIMIT 1) AS "thumbKey"`;
 
-interface AdminListingRow {
-  id: string;
+interface AdminListingRow extends Omit<AdminListing, 'approxCenter' | 'owner' | 'thumbUrl'> {
   thumbKey: string | null;
   ownerId: string;
   ownerDisplayName: string;
-  ownerStatus: string;
+  ownerStatus: UserStatus;
   lat: number;
   lng: number;
-  [k: string]: unknown;
 }
 
 interface LockedListing {
@@ -526,7 +542,7 @@ interface LockedListing {
   email: string | null;
 }
 
-interface MetricDay {
+interface MetricRow {
   day: string;
   newListings: number;
   searches: number;

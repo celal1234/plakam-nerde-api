@@ -1,0 +1,4522 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/api/v1/health": {
+      "get": {
+        "operationId": "HealthController_check",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "The Health Check is successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "ok",
+                        "degraded"
+                      ],
+                      "example": "ok"
+                    },
+                    "info": {
+                      "type": "object",
+                      "example": {
+                        "database": {
+                          "status": "up",
+                          "responseTime": 12
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": [
+                          "status"
+                        ],
+                        "properties": {
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "up",
+                              "degraded",
+                              "down"
+                            ]
+                          },
+                          "responseTime": {
+                            "type": "number",
+                            "description": "Time the health indicator took to respond, in ms"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "nullable": true
+                    },
+                    "error": {
+                      "type": "object",
+                      "example": {},
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": [
+                          "status"
+                        ],
+                        "properties": {
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "up",
+                              "degraded",
+                              "down"
+                            ]
+                          },
+                          "responseTime": {
+                            "type": "number",
+                            "description": "Time the health indicator took to respond, in ms"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "nullable": true
+                    },
+                    "details": {
+                      "type": "object",
+                      "example": {
+                        "database": {
+                          "status": "up",
+                          "responseTime": 12
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": [
+                          "status"
+                        ],
+                        "properties": {
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "up",
+                              "degraded",
+                              "down"
+                            ]
+                          },
+                          "responseTime": {
+                            "type": "number",
+                            "description": "Time the health indicator took to respond, in ms"
+                          }
+                        },
+                        "additionalProperties": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The Health Check is not successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "error",
+                        "shutting_down"
+                      ],
+                      "example": "error"
+                    },
+                    "info": {
+                      "type": "object",
+                      "example": {
+                        "database": {
+                          "status": "up",
+                          "responseTime": 12
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": [
+                          "status"
+                        ],
+                        "properties": {
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "up",
+                              "degraded",
+                              "down"
+                            ]
+                          },
+                          "responseTime": {
+                            "type": "number",
+                            "description": "Time the health indicator took to respond, in ms"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "nullable": true
+                    },
+                    "error": {
+                      "type": "object",
+                      "example": {
+                        "redis": {
+                          "status": "down",
+                          "message": "Could not connect",
+                          "responseTime": 3005
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": [
+                          "status"
+                        ],
+                        "properties": {
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "up",
+                              "degraded",
+                              "down"
+                            ]
+                          },
+                          "responseTime": {
+                            "type": "number",
+                            "description": "Time the health indicator took to respond, in ms"
+                          }
+                        },
+                        "additionalProperties": true
+                      },
+                      "nullable": true
+                    },
+                    "details": {
+                      "type": "object",
+                      "example": {
+                        "database": {
+                          "status": "up",
+                          "responseTime": 12
+                        },
+                        "redis": {
+                          "status": "down",
+                          "message": "Could not connect",
+                          "responseTime": 3005
+                        }
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "required": [
+                          "status"
+                        ],
+                        "properties": {
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "up",
+                              "degraded",
+                              "down"
+                            ]
+                          },
+                          "responseTime": {
+                            "type": "number",
+                            "description": "Time the health indicator took to respond, in ms"
+                          }
+                        },
+                        "additionalProperties": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Hata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Health"
+        ]
+      }
+    },
+    "/api/v1/auth/register": {
+      "post": {
+        "operationId": "AuthController_register",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegisterResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Hata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/verify-email": {
+      "post": {
+        "operationId": "AuthController_verifyEmail",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TokenDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "default": {
+            "description": "Hata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/verify-email/resend": {
+      "post": {
+        "operationId": "AuthController_resend",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "default": {
+            "description": "Hata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "operationId": "AuthController_login",
+        "parameters": [
+          {
+            "name": "X-Token-Transport",
+            "in": "header",
+            "description": "Tarayıcıda `cookie`: refresh token gövde yerine httpOnly cookie ile taşınır",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "cookie"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Hata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/refresh": {
+      "post": {
+        "operationId": "AuthController_refresh",
+        "parameters": [
+          {
+            "name": "X-Token-Transport",
+            "in": "header",
+            "description": "Tarayıcıda `cookie`: refresh token gövde yerine httpOnly cookie ile taşınır",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "cookie"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Hata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "operationId": "AuthController_logout",
+        "parameters": [
+          {
+            "name": "X-Token-Transport",
+            "in": "header",
+            "description": "Tarayıcıda `cookie`: refresh token gövde yerine httpOnly cookie ile taşınır",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "cookie"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "default": {
+            "description": "Hata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/password/forgot": {
+      "post": {
+        "operationId": "AuthController_forgot",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ForgotPasswordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "default": {
+            "description": "Hata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/auth/password/reset": {
+      "post": {
+        "operationId": "AuthController_reset",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "default": {
+            "description": "Hata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/v1/me": {
+      "get": {
+        "operationId": "UsersController_me",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Me"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Hata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Users"
+        ]
+      },
+      "patch": {
+        "operationId": "UsersController_update",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Me"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Hata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Users"
+        ]
+      },
+      "delete": {
+        "operationId": "UsersController_remove",
+        "parameters": [],
+        "responses": {
+          "202": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeletedAccount"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Hata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/api/v1/me/phone": {
+      "get": {
+        "operationId": "UsersController_phone",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PhoneLast4"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Hata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Users"
+        ]
+      },
+      "patch": {
+        "operationId": "UsersController_setPhone",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PhoneDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PhoneLast4"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Hata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Users"
+        ]
+      },
+      "delete": {
+        "operationId": "UsersController_deletePhone",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "default": {
+            "description": "Hata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/api/v1/me/notification-prefs": {
+      "get": {
+        "operationId": "UsersController_prefs",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationPrefs"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Hata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Users"
+        ]
+      },
+      "patch": {
+        "operationId": "UsersController_updatePrefs",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NotificationPrefsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationPrefs"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Hata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Users"
+        ]
+      }
+    },
+    "/api/v1/photos/upload-url": {
+      "post": {
+        "operationId": "PhotosController_uploadUrl",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadUrlDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadUrl"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Hata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Photos"
+        ]
+      }
+    },
+    "/api/v1/me/alerts": {
+      "get": {
+        "operationId": "AlertsController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PlateAlert"
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Hata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Alerts"
+        ]
+      },
+      "post": {
+        "operationId": "AlertsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAlertDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlateAlert"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Hata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Alerts"
+        ]
+      }
+    },
+    "/api/v1/me/alerts/{id}": {
+      "delete": {
+        "operationId": "AlertsController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "default": {
+            "description": "Hata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Alerts"
+        ]
+      }
+    },
+    "/api/v1/plates/search": {
+      "get": {
+        "operationId": "ListingsController_search",
+        "parameters": [
+          {
+            "name": "q",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "maxLength": 20,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResult"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Hata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Listings"
+        ]
+      }
+    },
+    "/api/v1/plates/check-duplicate": {
+      "post": {
+        "operationId": "ListingsController_checkDuplicate",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckDuplicateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DuplicateCheck"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Hata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Listings"
+        ]
+      }
+    },
+    "/api/v1/plates": {
+      "post": {
+        "operationId": "ListingsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateListingDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreatedListing"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Hata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Listings"
+        ]
+      }
+    },
+    "/api/v1/plates/{id}": {
+      "get": {
+        "operationId": "ListingsController_detail",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListingDetail"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Hata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Listings"
+        ]
+      },
+      "patch": {
+        "operationId": "ListingsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "description": "İlanın `version` değeri",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateListingDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListingVersion"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Hata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Listings"
+        ]
+      }
+    },
+    "/api/v1/plates/{id}/phone": {
+      "get": {
+        "operationId": "ListingsController_phone",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PhoneNumber"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Hata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Listings"
+        ]
+      }
+    },
+    "/api/v1/plates/{id}/extend": {
+      "post": {
+        "operationId": "ListingsController_extend",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExtendedListing"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Hata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Listings"
+        ]
+      }
+    },
+    "/api/v1/plates/{id}/close": {
+      "post": {
+        "operationId": "ListingsController_close",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CloseListingDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListingStatusChange"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Hata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Listings"
+        ]
+      }
+    },
+    "/api/v1/plates/{id}/handover": {
+      "post": {
+        "operationId": "ListingsController_handover",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HandoverDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListingStatusChange"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Hata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Listings"
+        ]
+      }
+    },
+    "/api/v1/plates/{id}/handover-confirm": {
+      "post": {
+        "operationId": "ListingsController_confirmHandover",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HandoverConfirmDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HandoverConfirmation"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Hata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Listings"
+        ]
+      }
+    },
+    "/api/v1/me/listings": {
+      "get": {
+        "operationId": "ListingsController_mine",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OwnListing"
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Hata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Listings"
+        ]
+      }
+    },
+    "/api/v1/conversations": {
+      "post": {
+        "operationId": "ConversationsController_start",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StartConversationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StartedConversation"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Hata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Conversations"
+        ]
+      },
+      "get": {
+        "operationId": "ConversationsController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ConversationSummary"
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Hata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Conversations"
+        ]
+      }
+    },
+    "/api/v1/conversations/{id}/messages": {
+      "get": {
+        "operationId": "ConversationsController_messages",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "after",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 0,
+              "type": "number"
+            }
+          },
+          {
+            "name": "before",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 50,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Message"
+                  }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Hata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Conversations"
+        ]
+      },
+      "post": {
+        "operationId": "ConversationsController_send",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendMessageDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Hata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Conversations"
+        ]
+      }
+    },
+    "/api/v1/conversations/{id}/read": {
+      "post": {
+        "operationId": "ConversationsController_read",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadReceipt"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Hata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Conversations"
+        ]
+      }
+    },
+    "/api/v1/users/{id}/block": {
+      "post": {
+        "operationId": "ConversationsController_block",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          },
+          "default": {
+            "description": "Hata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Conversations"
+        ]
+      }
+    },
+    "/api/v1/reports": {
+      "post": {
+        "operationId": "ReportsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReportDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreatedReport"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Hata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Reports"
+        ]
+      }
+    },
+    "/api/v1/admin/mfa/setup": {
+      "post": {
+        "operationId": "AdminMfaController_setup",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MfaSetup"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Hata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "AdminMfa"
+        ]
+      }
+    },
+    "/api/v1/admin/mfa/verify": {
+      "post": {
+        "operationId": "AdminMfaController_verify",
+        "parameters": [
+          {
+            "name": "X-Token-Transport",
+            "in": "header",
+            "description": "Tarayıcıda `cookie`: refresh token gövde yerine httpOnly cookie ile taşınır",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "cookie"
+              ]
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MfaCodeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Hata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "AdminMfa"
+        ]
+      }
+    },
+    "/api/v1/admin/listings": {
+      "get": {
+        "operationId": "AdminController_listings",
+        "parameters": [
+          {
+            "name": "plate",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maxLength": 20,
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pending",
+                "active",
+                "handed_over",
+                "closed",
+                "expired",
+                "removed",
+                "hidden"
+              ]
+            }
+          },
+          {
+            "name": "city",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maxLength": 40,
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50,
+              "type": "number"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 0,
+              "default": 0,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminListingPage"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Hata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/api/v1/admin/listings/{id}": {
+      "get": {
+        "operationId": "AdminController_listing",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminListingDetail"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Hata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/api/v1/admin/listings/{id}/approve": {
+      "post": {
+        "operationId": "AdminController_approve",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminListingStatus"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Hata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/api/v1/admin/listings/{id}/reject": {
+      "post": {
+        "operationId": "AdminController_reject",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReasonDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminListingStatus"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Hata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/api/v1/admin/listings/{id}/remove": {
+      "post": {
+        "operationId": "AdminController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReasonDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminListingStatus"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Hata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/api/v1/admin/listings/{id}/exact-location": {
+      "get": {
+        "operationId": "AdminController_exactLocation",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LatLng"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Hata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/api/v1/admin/reports": {
+      "get": {
+        "operationId": "AdminController_reports",
+        "parameters": [
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "open",
+              "type": "string",
+              "enum": [
+                "open",
+                "resolved_action",
+                "resolved_no_action"
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50,
+              "type": "number"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 0,
+              "default": 0,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminReportPage"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Hata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/api/v1/admin/reports/{id}/resolve": {
+      "post": {
+        "operationId": "AdminController_resolve",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResolveReportDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResolvedReport"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Hata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/api/v1/admin/users/{id}/restrict": {
+      "post": {
+        "operationId": "AdminController_restrict",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RestrictDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserRestriction"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Hata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/api/v1/admin/users/{id}/unrestrict": {
+      "post": {
+        "operationId": "AdminController_unrestrict",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserRestriction"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Hata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/api/v1/admin/users/{id}/phone": {
+      "get": {
+        "operationId": "AdminController_phone",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminPhone"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Hata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Admin"
+        ]
+      }
+    },
+    "/api/v1/admin/metrics": {
+      "get": {
+        "operationId": "AdminController_metrics",
+        "parameters": [
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Metrics"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Hata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Admin"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "Plakam Nerde? API",
+    "description": "",
+    "version": "1",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
+      }
+    },
+    "schemas": {
+      "RegisterDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "maxLength": 254,
+            "format": "email"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 128
+          },
+          "displayName": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 40
+          },
+          "termsVersion": {
+            "type": "string",
+            "maxLength": 20
+          }
+        },
+        "required": [
+          "email",
+          "password",
+          "displayName",
+          "termsVersion"
+        ]
+      },
+      "RegisterResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "verification_sent"
+            ]
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "TokenDto": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "maxLength": 200
+          }
+        },
+        "required": [
+          "token"
+        ]
+      },
+      "LoginDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 128
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "TokenResponse": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string"
+          },
+          "refreshToken": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "accessToken"
+        ]
+      },
+      "RefreshDto": {
+        "type": "object",
+        "properties": {
+          "refreshToken": {
+            "type": "string",
+            "maxLength": 200
+          }
+        }
+      },
+      "ForgotPasswordDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email"
+          }
+        },
+        "required": [
+          "email"
+        ]
+      },
+      "ResetPasswordDto": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "password": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 128
+          }
+        },
+        "required": [
+          "token",
+          "password"
+        ]
+      },
+      "Me": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "emailVerified": {
+            "type": "boolean"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "role": {
+            "enum": [
+              "user",
+              "admin"
+            ],
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "active",
+              "restricted",
+              "banned",
+              "deleted"
+            ],
+            "type": "string"
+          },
+          "phoneLast4": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "emailVerified",
+          "displayName",
+          "role",
+          "status",
+          "phoneLast4",
+          "createdAt"
+        ]
+      },
+      "UpdateMeDto": {
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 40
+          }
+        }
+      },
+      "DeletedAccount": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "deleted"
+            ]
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "PhoneLast4": {
+        "type": "object",
+        "properties": {
+          "last4": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "last4"
+        ]
+      },
+      "PhoneDto": {
+        "type": "object",
+        "properties": {
+          "phone": {
+            "type": "string",
+            "maxLength": 25
+          }
+        },
+        "required": [
+          "phone"
+        ]
+      },
+      "NotificationPrefs": {
+        "type": "object",
+        "properties": {
+          "newMessage": {
+            "type": "boolean"
+          },
+          "expiry": {
+            "type": "boolean"
+          },
+          "plateAlert": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "newMessage",
+          "expiry",
+          "plateAlert"
+        ]
+      },
+      "NotificationPrefsDto": {
+        "type": "object",
+        "properties": {
+          "newMessage": {
+            "type": "boolean"
+          },
+          "expiry": {
+            "type": "boolean"
+          },
+          "plateAlert": {
+            "type": "boolean"
+          }
+        }
+      },
+      "UploadUrlDto": {
+        "type": "object",
+        "properties": {
+          "mime": {
+            "type": "string",
+            "enum": [
+              "image/jpeg",
+              "image/png"
+            ]
+          },
+          "bytes": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "mime",
+          "bytes"
+        ]
+      },
+      "UploadUrl": {
+        "type": "object",
+        "properties": {
+          "photoId": {
+            "type": "string"
+          },
+          "putUrl": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "photoId",
+          "putUrl"
+        ]
+      },
+      "PlateAlert": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "plate": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "plate",
+          "expiresAt",
+          "createdAt"
+        ]
+      },
+      "CreateAlertDto": {
+        "type": "object",
+        "properties": {
+          "plate": {
+            "type": "string",
+            "maxLength": 20
+          }
+        },
+        "required": [
+          "plate"
+        ]
+      },
+      "PlateQuery": {
+        "type": "object",
+        "properties": {
+          "normalized": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "normalized"
+        ]
+      },
+      "LatLng": {
+        "type": "object",
+        "properties": {
+          "lat": {
+            "type": "number"
+          },
+          "lng": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "lat",
+          "lng"
+        ]
+      },
+      "ListingCard": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "plateDisplay": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "pending",
+              "handed_over",
+              "closed",
+              "expired",
+              "removed"
+            ]
+          },
+          "foundAt": {
+            "type": "string"
+          },
+          "city": {
+            "type": "string"
+          },
+          "district": {
+            "type": "string",
+            "nullable": true
+          },
+          "thumbUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "approxCenter": {
+            "$ref": "#/components/schemas/LatLng"
+          },
+          "approxRadiusM": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "plateDisplay",
+          "status",
+          "foundAt",
+          "city",
+          "district",
+          "thumbUrl",
+          "approxCenter",
+          "approxRadiusM"
+        ]
+      },
+      "SearchResult": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "$ref": "#/components/schemas/PlateQuery"
+          },
+          "active": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ListingCard"
+            }
+          },
+          "inactive": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ListingCard"
+            }
+          }
+        },
+        "required": [
+          "query",
+          "active",
+          "inactive"
+        ]
+      },
+      "LocationDto": {
+        "type": "object",
+        "properties": {
+          "lat": {
+            "type": "number"
+          },
+          "lng": {
+            "type": "number"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "gps",
+              "map"
+            ]
+          }
+        },
+        "required": [
+          "lat",
+          "lng",
+          "source"
+        ]
+      },
+      "CheckDuplicateDto": {
+        "type": "object",
+        "properties": {
+          "plate": {
+            "type": "string",
+            "maxLength": 20
+          },
+          "location": {
+            "$ref": "#/components/schemas/LocationDto"
+          }
+        },
+        "required": [
+          "plate",
+          "location"
+        ]
+      },
+      "DuplicateCheck": {
+        "type": "object",
+        "properties": {
+          "duplicates": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ListingCard"
+            }
+          }
+        },
+        "required": [
+          "duplicates"
+        ]
+      },
+      "CreateListingDto": {
+        "type": "object",
+        "properties": {
+          "plate": {
+            "type": "string",
+            "maxLength": 20
+          },
+          "photoIds": {
+            "uniqueItems": true,
+            "minItems": 1,
+            "maxItems": 3,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "location": {
+            "$ref": "#/components/schemas/LocationDto"
+          },
+          "city": {
+            "type": "string",
+            "maxLength": 40
+          },
+          "district": {
+            "type": "string",
+            "maxLength": 60
+          },
+          "foundAt": {
+            "type": "string"
+          },
+          "isOfficialPlate": {
+            "type": "boolean"
+          },
+          "showPhone": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "plate",
+          "photoIds",
+          "location",
+          "city",
+          "foundAt",
+          "isOfficialPlate",
+          "showPhone"
+        ]
+      },
+      "ListingOwner": {
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "displayName"
+        ]
+      },
+      "CreatedListing": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "plateDisplay": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "active",
+              "pending",
+              "handed_over",
+              "closed",
+              "expired",
+              "removed"
+            ],
+            "type": "string"
+          },
+          "foundAt": {
+            "type": "string"
+          },
+          "city": {
+            "type": "string"
+          },
+          "district": {
+            "type": "string",
+            "nullable": true
+          },
+          "thumbUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "approxCenter": {
+            "$ref": "#/components/schemas/LatLng"
+          },
+          "approxRadiusM": {
+            "type": "number"
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "PLATE_FORMAT",
+                "DUPLICATE_NEARBY"
+              ]
+            }
+          },
+          "duplicates": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ListingCard"
+            }
+          },
+          "expiresAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "isOfficialPlate": {
+            "type": "boolean"
+          },
+          "plateFormatOk": {
+            "type": "boolean"
+          },
+          "handoverConfirmed": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "extended": {
+            "type": "boolean"
+          },
+          "version": {
+            "type": "number"
+          },
+          "owner": {
+            "$ref": "#/components/schemas/ListingOwner"
+          },
+          "hasPhone": {
+            "type": "boolean"
+          },
+          "photoUrls": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "plateDisplay",
+          "status",
+          "foundAt",
+          "city",
+          "district",
+          "thumbUrl",
+          "approxCenter",
+          "approxRadiusM",
+          "warnings",
+          "duplicates",
+          "expiresAt",
+          "createdAt",
+          "isOfficialPlate",
+          "plateFormatOk",
+          "handoverConfirmed",
+          "extended",
+          "version",
+          "owner",
+          "hasPhone",
+          "photoUrls"
+        ]
+      },
+      "ListingDetail": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "plateDisplay": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "active",
+              "pending",
+              "handed_over",
+              "closed",
+              "expired",
+              "removed"
+            ],
+            "type": "string"
+          },
+          "foundAt": {
+            "type": "string"
+          },
+          "city": {
+            "type": "string"
+          },
+          "district": {
+            "type": "string",
+            "nullable": true
+          },
+          "thumbUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "approxCenter": {
+            "$ref": "#/components/schemas/LatLng"
+          },
+          "approxRadiusM": {
+            "type": "number"
+          },
+          "expiresAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "isOfficialPlate": {
+            "type": "boolean"
+          },
+          "plateFormatOk": {
+            "type": "boolean"
+          },
+          "handoverConfirmed": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "extended": {
+            "type": "boolean"
+          },
+          "version": {
+            "type": "number"
+          },
+          "owner": {
+            "$ref": "#/components/schemas/ListingOwner"
+          },
+          "hasPhone": {
+            "type": "boolean"
+          },
+          "photoUrls": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "plateDisplay",
+          "status",
+          "foundAt",
+          "city",
+          "district",
+          "thumbUrl",
+          "approxCenter",
+          "approxRadiusM",
+          "expiresAt",
+          "createdAt",
+          "isOfficialPlate",
+          "plateFormatOk",
+          "handoverConfirmed",
+          "extended",
+          "version",
+          "owner",
+          "hasPhone",
+          "photoUrls"
+        ]
+      },
+      "PhoneNumber": {
+        "type": "object",
+        "properties": {
+          "phone": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "phone"
+        ]
+      },
+      "UpdateListingDto": {
+        "type": "object",
+        "properties": {
+          "showPhone": {
+            "type": "boolean"
+          },
+          "foundAt": {
+            "type": "string"
+          },
+          "district": {
+            "type": "string",
+            "maxLength": 60
+          }
+        }
+      },
+      "ListingVersion": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "version": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "version"
+        ]
+      },
+      "ExtendedListing": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active"
+            ]
+          },
+          "expiresAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "version": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "expiresAt",
+          "version"
+        ]
+      },
+      "CloseListingDto": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "enum": [
+              "handed_over_elsewhere",
+              "given_to_police",
+              "mistake",
+              "other"
+            ]
+          }
+        },
+        "required": [
+          "reason"
+        ]
+      },
+      "ListingStatusChange": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "active",
+              "pending",
+              "handed_over",
+              "closed",
+              "expired",
+              "removed"
+            ],
+            "type": "string"
+          },
+          "version": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "version"
+        ]
+      },
+      "HandoverDto": {
+        "type": "object",
+        "properties": {
+          "conversationId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
+      "HandoverConfirmDto": {
+        "type": "object",
+        "properties": {
+          "confirmed": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "confirmed"
+        ]
+      },
+      "HandoverConfirmation": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "handoverConfirmed": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "handoverConfirmed"
+        ]
+      },
+      "OwnListing": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "plateDisplay": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "active",
+              "pending",
+              "handed_over",
+              "closed",
+              "expired",
+              "removed"
+            ],
+            "type": "string"
+          },
+          "foundAt": {
+            "type": "string"
+          },
+          "city": {
+            "type": "string"
+          },
+          "district": {
+            "type": "string",
+            "nullable": true
+          },
+          "thumbUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "approxCenter": {
+            "$ref": "#/components/schemas/LatLng"
+          },
+          "approxRadiusM": {
+            "type": "number"
+          },
+          "expiresAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "extended": {
+            "type": "boolean"
+          },
+          "version": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "plateDisplay",
+          "status",
+          "foundAt",
+          "city",
+          "district",
+          "thumbUrl",
+          "approxCenter",
+          "approxRadiusM",
+          "expiresAt",
+          "extended",
+          "version"
+        ]
+      },
+      "StartConversationDto": {
+        "type": "object",
+        "properties": {
+          "listingId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "firstMessage": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "clientId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "listingId",
+          "firstMessage",
+          "clientId"
+        ]
+      },
+      "UserRef": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "displayName"
+        ]
+      },
+      "LastMessage": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "location",
+              "text",
+              "system"
+            ]
+          },
+          "body": {
+            "type": "string",
+            "nullable": true
+          },
+          "senderId": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "body",
+          "senderId",
+          "createdAt"
+        ]
+      },
+      "ConversationSummary": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "listingId": {
+            "type": "string"
+          },
+          "plateDisplay": {
+            "type": "string"
+          },
+          "listingStatus": {
+            "enum": [
+              "active",
+              "pending",
+              "handed_over",
+              "closed",
+              "expired",
+              "removed"
+            ],
+            "type": "string"
+          },
+          "role": {
+            "enum": [
+              "owner",
+              "seeker"
+            ],
+            "type": "string"
+          },
+          "otherUser": {
+            "$ref": "#/components/schemas/UserRef"
+          },
+          "readOnly": {
+            "type": "boolean"
+          },
+          "lastMessageAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "lastMessage": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LastMessage"
+              }
+            ]
+          },
+          "unread": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "listingId",
+          "plateDisplay",
+          "listingStatus",
+          "role",
+          "otherUser",
+          "readOnly",
+          "lastMessageAt",
+          "lastMessage",
+          "unread"
+        ]
+      },
+      "Message": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "conversationId": {
+            "type": "string"
+          },
+          "senderId": {
+            "type": "string",
+            "nullable": true
+          },
+          "kind": {
+            "enum": [
+              "location",
+              "text",
+              "system"
+            ],
+            "type": "string"
+          },
+          "body": {
+            "type": "string",
+            "nullable": true
+          },
+          "point": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LatLng"
+              }
+            ]
+          },
+          "clientId": {
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "readAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "conversationId",
+          "senderId",
+          "kind",
+          "body",
+          "point",
+          "clientId",
+          "createdAt",
+          "readAt"
+        ]
+      },
+      "StartedConversation": {
+        "type": "object",
+        "properties": {
+          "conversation": {
+            "$ref": "#/components/schemas/ConversationSummary"
+          },
+          "message": {
+            "$ref": "#/components/schemas/Message"
+          }
+        },
+        "required": [
+          "conversation",
+          "message"
+        ]
+      },
+      "PointDto": {
+        "type": "object",
+        "properties": {
+          "lat": {
+            "type": "number"
+          },
+          "lng": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "lat",
+          "lng"
+        ]
+      },
+      "SendMessageDto": {
+        "type": "object",
+        "properties": {
+          "clientId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "text",
+              "location"
+            ]
+          },
+          "body": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "point": {
+            "$ref": "#/components/schemas/PointDto"
+          }
+        },
+        "required": [
+          "clientId",
+          "kind"
+        ]
+      },
+      "ReadReceipt": {
+        "type": "object",
+        "properties": {
+          "upToId": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "upToId"
+        ]
+      },
+      "CreateReportDto": {
+        "type": "object",
+        "properties": {
+          "listingId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "conversationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "fake",
+              "wrong_plate",
+              "inappropriate_photo",
+              "personal_data",
+              "harassment",
+              "spam",
+              "other"
+            ]
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 1000
+          }
+        },
+        "required": [
+          "reason"
+        ]
+      },
+      "CreatedReport": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "open"
+            ]
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "createdAt"
+        ]
+      },
+      "MfaSetup": {
+        "type": "object",
+        "properties": {
+          "secret": {
+            "type": "string"
+          },
+          "otpauthUrl": {
+            "type": "string"
+          },
+          "expiresInSec": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "secret",
+          "otpauthUrl",
+          "expiresInSec"
+        ]
+      },
+      "MfaCodeDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "pattern": "^\\d{6}$"
+          }
+        },
+        "required": [
+          "code"
+        ]
+      },
+      "AdminUserRef": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "restricted",
+              "banned",
+              "deleted"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "displayName",
+          "status"
+        ]
+      },
+      "AdminListing": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "plateDisplay": {
+            "type": "string"
+          },
+          "plateNormalized": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "pending",
+              "handed_over",
+              "closed",
+              "expired",
+              "removed"
+            ]
+          },
+          "hiddenByReports": {
+            "type": "boolean"
+          },
+          "isOfficialPlate": {
+            "type": "boolean"
+          },
+          "plateFormatOk": {
+            "type": "boolean"
+          },
+          "city": {
+            "type": "string"
+          },
+          "district": {
+            "type": "string",
+            "nullable": true
+          },
+          "foundAt": {
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "expiresAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "handoverConfirmed": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "openReports": {
+            "type": "number"
+          },
+          "approxCenter": {
+            "$ref": "#/components/schemas/LatLng"
+          },
+          "owner": {
+            "$ref": "#/components/schemas/AdminUserRef"
+          },
+          "thumbUrl": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "plateDisplay",
+          "plateNormalized",
+          "status",
+          "hiddenByReports",
+          "isOfficialPlate",
+          "plateFormatOk",
+          "city",
+          "district",
+          "foundAt",
+          "createdAt",
+          "expiresAt",
+          "handoverConfirmed",
+          "openReports",
+          "approxCenter",
+          "owner",
+          "thumbUrl"
+        ]
+      },
+      "AdminListingPage": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "number"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminListing"
+            }
+          }
+        },
+        "required": [
+          "total",
+          "items"
+        ]
+      },
+      "AdminListingReport": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "other",
+              "fake",
+              "wrong_plate",
+              "inappropriate_photo",
+              "personal_data",
+              "harassment",
+              "spam"
+            ]
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "open",
+              "resolved_action",
+              "resolved_no_action"
+            ]
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "reporter": {
+            "$ref": "#/components/schemas/UserRef"
+          }
+        },
+        "required": [
+          "id",
+          "reason",
+          "note",
+          "status",
+          "createdAt",
+          "reporter"
+        ]
+      },
+      "AdminListingDetail": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "plateDisplay": {
+            "type": "string"
+          },
+          "plateNormalized": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "active",
+              "pending",
+              "handed_over",
+              "closed",
+              "expired",
+              "removed"
+            ],
+            "type": "string"
+          },
+          "hiddenByReports": {
+            "type": "boolean"
+          },
+          "isOfficialPlate": {
+            "type": "boolean"
+          },
+          "plateFormatOk": {
+            "type": "boolean"
+          },
+          "city": {
+            "type": "string"
+          },
+          "district": {
+            "type": "string",
+            "nullable": true
+          },
+          "foundAt": {
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "expiresAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "handoverConfirmed": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "openReports": {
+            "type": "number"
+          },
+          "approxCenter": {
+            "$ref": "#/components/schemas/LatLng"
+          },
+          "owner": {
+            "$ref": "#/components/schemas/AdminUserRef"
+          },
+          "thumbUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "photoUrls": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "reports": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminListingReport"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "plateDisplay",
+          "plateNormalized",
+          "status",
+          "hiddenByReports",
+          "isOfficialPlate",
+          "plateFormatOk",
+          "city",
+          "district",
+          "foundAt",
+          "createdAt",
+          "expiresAt",
+          "handoverConfirmed",
+          "openReports",
+          "approxCenter",
+          "owner",
+          "thumbUrl",
+          "photoUrls",
+          "reports"
+        ]
+      },
+      "AdminListingStatus": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "active",
+              "pending",
+              "handed_over",
+              "closed",
+              "expired",
+              "removed"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "status"
+        ]
+      },
+      "ReasonDto": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "maxLength": 500
+          }
+        },
+        "required": [
+          "reason"
+        ]
+      },
+      "AdminReportListing": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "plateDisplay": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "pending",
+              "handed_over",
+              "closed",
+              "expired",
+              "removed"
+            ]
+          },
+          "hiddenByReports": {
+            "type": "boolean"
+          },
+          "openReports": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "plateDisplay",
+          "status",
+          "hiddenByReports",
+          "openReports"
+        ]
+      },
+      "AdminReportUser": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "active",
+              "restricted",
+              "banned",
+              "deleted"
+            ],
+            "type": "string"
+          },
+          "restrictedUntil": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "displayName",
+          "status",
+          "restrictedUntil"
+        ]
+      },
+      "AdminReport": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "other",
+              "fake",
+              "wrong_plate",
+              "inappropriate_photo",
+              "personal_data",
+              "harassment",
+              "spam"
+            ]
+          },
+          "note": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "open",
+              "resolved_action",
+              "resolved_no_action"
+            ]
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "resolvedAt": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          },
+          "reporter": {
+            "$ref": "#/components/schemas/UserRef"
+          },
+          "listing": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AdminReportListing"
+              }
+            ]
+          },
+          "targetUser": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AdminReportUser"
+              }
+            ]
+          },
+          "conversationId": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "reason",
+          "note",
+          "status",
+          "createdAt",
+          "resolvedAt",
+          "reporter",
+          "listing",
+          "targetUser",
+          "conversationId"
+        ]
+      },
+      "AdminReportPage": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "number"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminReport"
+            }
+          }
+        },
+        "required": [
+          "total",
+          "items"
+        ]
+      },
+      "ResolveReportDto": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": [
+              "none",
+              "remove_listing",
+              "restrict_user"
+            ]
+          },
+          "days": {
+            "type": "number",
+            "nullable": true,
+            "enum": [
+              1,
+              7,
+              30
+            ]
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 500
+          }
+        },
+        "required": [
+          "action"
+        ]
+      },
+      "ResolvedReport": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "resolved_action",
+              "resolved_no_action"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "status"
+        ]
+      },
+      "RestrictDto": {
+        "type": "object",
+        "properties": {
+          "days": {
+            "type": "number",
+            "nullable": true,
+            "enum": [
+              1,
+              7,
+              30
+            ]
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 500
+          }
+        },
+        "required": [
+          "days"
+        ]
+      },
+      "UserRestriction": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "active",
+              "restricted"
+            ],
+            "type": "string"
+          },
+          "restrictedUntil": {
+            "format": "date-time",
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "restrictedUntil"
+        ]
+      },
+      "AdminPhone": {
+        "type": "object",
+        "properties": {
+          "phone": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "phone"
+        ]
+      },
+      "MetricTotals": {
+        "type": "object",
+        "properties": {
+          "newListings": {
+            "type": "number"
+          },
+          "searches": {
+            "type": "number"
+          },
+          "searchesWithResult": {
+            "type": "number"
+          },
+          "matchRate": {
+            "type": "number",
+            "nullable": true
+          },
+          "handovers": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "newListings",
+          "searches",
+          "searchesWithResult",
+          "matchRate",
+          "handovers"
+        ]
+      },
+      "MetricsDay": {
+        "type": "object",
+        "properties": {
+          "day": {
+            "type": "string"
+          },
+          "newListings": {
+            "type": "number"
+          },
+          "searches": {
+            "type": "number"
+          },
+          "searchesWithResult": {
+            "type": "number"
+          },
+          "matchRate": {
+            "type": "number",
+            "nullable": true
+          },
+          "handovers": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "day",
+          "newListings",
+          "searches",
+          "searchesWithResult",
+          "matchRate",
+          "handovers"
+        ]
+      },
+      "Metrics": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string",
+            "nullable": true
+          },
+          "to": {
+            "type": "string",
+            "nullable": true
+          },
+          "totals": {
+            "$ref": "#/components/schemas/MetricTotals"
+          },
+          "days": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MetricsDay"
+            }
+          }
+        },
+        "required": [
+          "from",
+          "to",
+          "totals",
+          "days"
+        ]
+      },
+      "ApiErrorBody": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "details": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ]
+      },
+      "ApiErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "$ref": "#/components/schemas/ApiErrorBody"
+          }
+        },
+        "required": [
+          "error"
+        ]
+      }
+    }
+  }
+}
