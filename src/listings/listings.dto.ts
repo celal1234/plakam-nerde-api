@@ -59,3 +59,7 @@ export class HandoverDto {
 export class SearchQueryDto {
   @Transform(trim) @IsString() @IsNotEmpty() @MaxLength(20) q: string;
 }
+
+export class HandoverConfirmDto {
+  @IsBoolean() confirmed: boolean;
+}

@@ -10,6 +10,7 @@ import { HealthModule } from './health/health.module';
 import { ListingsModule } from './listings/listings.module';
 import { PhotosModule } from './photos/photos.module';
 import { MailModule } from './mail/mail.module';
+import { MaintenanceModule } from './maintenance/maintenance.module';
 import { QueueModule } from './queue/queue.module';
 import { RealtimeModule } from './realtime/realtime.module';
 import { RedisModule } from './redis/redis.module';
@@ -39,6 +40,7 @@ import { UsersModule } from './users/users.module';
     PhotosModule,
     ListingsModule,
     ConversationsModule,
+    MaintenanceModule,
   ],
 })
 export class AppModule {}

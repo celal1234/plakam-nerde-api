@@ -5,6 +5,7 @@ import {
   CheckDuplicateDto,
   CloseListingDto,
   CreateListingDto,
+  HandoverConfirmDto,
   HandoverDto,
   SearchQueryDto,
   UpdateListingDto,
@@ -70,6 +71,12 @@ export class ListingsController {
   @HttpCode(HttpStatus.OK)
   handover(@CurrentUser() user: AuthUser, @Param('id', listingId) id: string, @Body() dto: HandoverDto) {
     return this.listings.handover(user, id, dto.conversationId);
+  }
+
+  @Post('plates/:id/handover-confirm')
+  @HttpCode(HttpStatus.OK)
+  confirmHandover(@CurrentUser() user: AuthUser, @Param('id', listingId) id: string, @Body() dto: HandoverConfirmDto) {
+    return this.listings.confirmHandover(user, id, dto.confirmed);
   }
 
   @Get('me/listings')
