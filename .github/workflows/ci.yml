@@ -32,6 +32,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
       - run: pnpm build
+      # İstemci tipleri openapi.json'dan üretilir; API değişip belge yenilenmediyse CI durur.
+      - run: pnpm openapi && git diff --exit-code openapi.json
       - run: pnpm test
       - run: pnpm test:e2e
       - run: pnpm audit --prod --audit-level high

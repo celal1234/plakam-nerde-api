@@ -11,7 +11,24 @@ import { assertCanWrite } from '../common/restriction';
 import { PHOTOS, PhotoJob } from '../queue/queue.module';
 import { RealtimeService } from '../realtime/realtime.service';
 import { StorageService } from '../storage/storage.service';
-import { CheckDuplicateDto, CreateListingDto, LocationDto, UpdateListingDto } from './listings.dto';
+import {
+  CheckDuplicateDto,
+  CreatedListing,
+  CreateListingDto,
+  DuplicateCheck,
+  ExtendedListing,
+  HandoverConfirmation,
+  ListingCard,
+  ListingDetail,
+  ListingStatus,
+  ListingStatusChange,
+  ListingVersion,
+  LocationDto,
+  OwnListing,
+  PhoneNumber,
+  SearchResult,
+  UpdateListingDto,
+} from './listings.dto';
 
 // Türkiye'yi kaba bir dikdörtgenle sınırlar (BR-003). Sınır komşularının küçük kısımlarını da
 // kapsar; kesin sınır poligonu ileride eklenebilir.
@@ -31,7 +48,7 @@ const CARD_COLUMNS = `
 interface CardRow {
   id: string;
   plateDisplay: string;
-  status: string;
+  status: ListingStatus;
   foundAt: string;
   city: string;
   district: string | null;
@@ -78,7 +95,7 @@ export class ListingsService {
     private readonly alerts: AlertsService,
   ) {}
 
-  async search(q: string, ip: string) {
+  async search(q: string, ip: string): Promise<SearchResult> {
     await this.limiter.consume(`search:${ip}`, 20, 60);
     const { normalized } = normalizePlate(q);
     if (!normalized) throw new ApiError(HttpStatus.BAD_REQUEST, 'PLATE_REQUIRED', 'Plaka numarası girin.');
@@ -99,13 +116,13 @@ export class ListingsService {
     };
   }
 
-  async detail(id: string) {
+  async detail(id: string): Promise<ListingDetail> {
     const row = await this.detailRow(id, true);
     if (!row) throw this.notFound();
     return this.toDetail(row);
   }
 
-  async mine(user: AuthUser) {
+  async mine(user: AuthUser): Promise<OwnListing[]> {
     const rows: (CardRow & { expiresAt: Date; extended: boolean; version: number })[] = await this.db.query(
       `SELECT ${CARD_COLUMNS}, l.expires_at AS "expiresAt", l.extended_at IS NOT NULL AS extended, l.version
        FROM listings l WHERE l.owner_id = $1 AND l.status <> 'removed'
@@ -117,13 +134,13 @@ export class ListingsService {
     );
   }
 
-  async checkDuplicate(dto: CheckDuplicateDto) {
+  async checkDuplicate(dto: CheckDuplicateDto): Promise<DuplicateCheck> {
     this.assertInTurkey(dto.location);
     const rows = await this.findDuplicates(this.db.manager, normalizePlate(dto.plate).normalized, dto.location);
     return { duplicates: await Promise.all(rows.map((r) => this.toCard(r))) };
   }
 
-  async create(user: AuthUser, dto: CreateListingDto) {
+  async create(user: AuthUser, dto: CreateListingDto): Promise<CreatedListing> {
     const plate = normalizePlate(dto.plate);
     if (!plate.normalized) throw new ApiError(HttpStatus.BAD_REQUEST, 'PLATE_REQUIRED', 'Plaka numarası girin.');
     this.assertInTurkey(dto.location);
@@ -187,7 +204,7 @@ export class ListingsService {
     // Onay bekleyen (resmî plaka) ilanda alarm, yönetici onayladığında tetiklenir.
     if (!dto.isOfficialPlate) await this.alerts.listingPublished(id);
 
-    const warnings: string[] = [];
+    const warnings: CreatedListing['warnings'] = [];
     if (!plate.formatOk) warnings.push('PLATE_FORMAT');
     if (duplicates.length) warnings.push('DUPLICATE_NEARBY');
     // Yeni ilan `pending` olabilir; sahibine yine de gösterilir.
@@ -199,7 +216,7 @@ export class ListingsService {
     };
   }
 
-  async update(user: AuthUser, id: string, ifMatch: string | undefined, dto: UpdateListingDto) {
+  async update(user: AuthUser, id: string, ifMatch: string | undefined, dto: UpdateListingDto): Promise<ListingVersion> {
     const version = Number(ifMatch?.replace(/"/g, ''));
     if (!Number.isInteger(version)) {
       throw new ApiError(HttpStatus.BAD_REQUEST, 'VALIDATION_FAILED', 'If-Match başlığında ilan sürümü gerekli.', {
@@ -230,7 +247,7 @@ export class ListingsService {
   }
 
   // BR-013: tek uzatma, 30 gün; süre dolduktan en geç 30 gün sonrasına kadar.
-  async extend(user: AuthUser, id: string) {
+  async extend(user: AuthUser, id: string): Promise<ExtendedListing> {
     return this.db.transaction(async (tx) => {
       const row = await this.lockOwned(tx, user, id);
       if (!ACTIVE_LIKE.includes(row.effective)) throw this.notActive();
@@ -253,11 +270,11 @@ export class ListingsService {
     });
   }
 
-  async close(user: AuthUser, id: string, reason: string) {
+  async close(user: AuthUser, id: string, reason: string): Promise<ListingStatusChange> {
     return this.finish(user, id, [...ACTIVE_LIKE, 'pending'], `status = 'closed', closed_reason = $2`, [reason], 'closed');
   }
 
-  async handover(user: AuthUser, id: string, conversationId?: string) {
+  async handover(user: AuthUser, id: string, conversationId?: string): Promise<ListingStatusChange> {
     if (conversationId) {
       const [conv] = await this.db.query(`SELECT 1 FROM conversations WHERE id = $1 AND listing_id = $2`, [conversationId, id]);
       if (!conv) throw new ApiError(HttpStatus.BAD_REQUEST, 'VALIDATION_FAILED', 'Konuşma bu ilana ait değil.');
@@ -293,7 +310,7 @@ export class ListingsService {
 
   // FR-038/039: numara yalnızca sahibi "telefonum görünsün" dediyse, aktif ilanda ve giriş yapmış kullanıcıya verilir.
   // Toplu toplamayı zorlaştırmak için kullanıcı başına günde 20 numara; engellenmiş kullanıcıya hiç verilmez.
-  async phone(user: AuthUser, id: string) {
+  async phone(user: AuthUser, id: string): Promise<PhoneNumber> {
     const [row]: { owner_id: string; phone_enc: Buffer | null; blocked: boolean }[] = await this.db.query(
       `SELECT l.owner_id, up.phone_enc,
               EXISTS (SELECT 1 FROM blocks b WHERE (b.blocker_id = l.owner_id AND b.blocked_id = $2)
@@ -310,7 +327,7 @@ export class ListingsService {
   }
 
   // FR-069: teslim konuşmasının arayan tarafı 7 gün içinde bir kez yanıtlar. "Hayır" yönetici incelemesine düşer.
-  async confirmHandover(user: AuthUser, id: string, confirmed: boolean) {
+  async confirmHandover(user: AuthUser, id: string, confirmed: boolean): Promise<HandoverConfirmation> {
     return this.db.transaction(async (tx) => {
       const [row]: { allowed: boolean }[] = await tx.query(
         `SELECT (l.status = 'handed_over' AND l.handover_confirmed IS NULL
@@ -337,7 +354,14 @@ export class ListingsService {
     });
   }
 
-  private async finish(user: AuthUser, id: string, from: string[], set: string, params: unknown[], to: string) {
+  private async finish(
+    user: AuthUser,
+    id: string,
+    from: string[],
+    set: string,
+    params: unknown[],
+    to: ListingStatus,
+  ): Promise<ListingStatusChange> {
     return this.db.transaction(async (tx) => {
       const row = await this.lockOwned(tx, user, id);
       if (!from.includes(row.effective)) throw this.notActive();
@@ -421,7 +445,7 @@ export class ListingsService {
     if (future) throw new ApiError(HttpStatus.BAD_REQUEST, 'FOUND_AT_IN_FUTURE', 'Bulunma tarihi ileri bir tarih olamaz.');
   }
 
-  private async toCard(r: CardRow) {
+  private async toCard(r: CardRow): Promise<ListingCard> {
     return {
       id: r.id,
       plateDisplay: r.plateDisplay,
@@ -436,7 +460,7 @@ export class ListingsService {
     };
   }
 
-  private async toDetail(r: DetailRow) {
+  private async toDetail(r: DetailRow): Promise<ListingDetail> {
     return {
       ...(await this.toCard(r)),
       expiresAt: r.expiresAt,

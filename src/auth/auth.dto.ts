@@ -33,3 +33,15 @@ export class ResetPasswordDto {
   @IsString() @IsNotEmpty() @MaxLength(200) token: string;
   @IsString() @MinLength(10) @MaxLength(128) password: string;
 }
+
+export class TokenPair {
+  // 15 dakika geçerli JWT; `Authorization: Bearer` ile gönderilir.
+  accessToken: string;
+  // 30 gün geçerli, tek kullanımlık; her yenilemede yenisi döner.
+  refreshToken: string;
+}
+
+export class RegisterResponse {
+  // E-posta zaten kayıtlıysa da aynı yanıt döner.
+  status: 'verification_sent';
+}

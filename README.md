@@ -83,3 +83,4 @@ Henüz yok: push bildirimi (FCM), Google/Apple girişi, cihaz token'ı (`/me/dev
 - `src/database/migrations/` — şema değişiklikleri; yenisi `migrations/index.ts`'e eklenir.
 - `src/common/errors/` — T6 §4 hata biçimi `{ error: { code, message, details } }`.
 - `src/common/plate/` — plaka normalizasyonu ve esnek format kontrolü (T2).
+- `openapi.json` — API sözleşmesi; web, panel ve mobil istemci tipleri buradan üretilir. Şemalar `*.dto.ts` sınıflarından ve controller dönüş tiplerinden Swagger CLI eklentisiyle çıkar; bu yüzden yanıt dönen her controller metodu dönüş tipini bir DTO sınıfıyla belirtir. Uç ekleyip değiştirdikten sonra `pnpm build && pnpm openapi` ile yenile ve commit'le (CI eskisini yakalar).

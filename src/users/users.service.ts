@@ -4,18 +4,7 @@ import { DataCipher } from '../common/crypto/data-cipher';
 import { ApiError } from '../common/errors/api-error';
 import { normalizePhone } from '../common/phone/phone';
 import { RateLimiter } from '../common/rate-limit/rate-limiter.service';
-import { NotificationPrefsDto, UpdateMeDto } from './users.dto';
-
-export interface Me {
-  id: string;
-  email: string;
-  emailVerified: boolean;
-  displayName: string;
-  role: string;
-  status: string;
-  phoneLast4: string | null;
-  createdAt: Date;
-}
+import { Me, NotificationPrefs, NotificationPrefsDto, PhoneLast4, UpdateMeDto } from './users.dto';
 
 @Injectable()
 export class UsersService {
@@ -48,14 +37,14 @@ export class UsersService {
   }
 
   // FR-036: numara şifreli saklanır (NFR-006); kullanıcıya yalnızca son 4 hane döner (T6 §3).
-  async phone(userId: string) {
+  async phone(userId: string): Promise<PhoneLast4> {
     const [row]: { last4: string }[] = await this.db.query(`SELECT phone_last4 AS last4 FROM user_private WHERE user_id = $1`, [
       userId,
     ]);
     return { last4: row?.last4 ?? null };
   }
 
-  async setPhone(userId: string, input: string) {
+  async setPhone(userId: string, input: string): Promise<PhoneLast4> {
     const phone = normalizePhone(input);
     if (!phone) throw new ApiError(HttpStatus.BAD_REQUEST, 'PHONE_INVALID', 'Geçerli bir Türkiye telefon numarası girin.');
     await this.limiter.consume(`phone-set:${userId}`, 10, 86400);
@@ -72,7 +61,7 @@ export class UsersService {
     await this.db.query(`UPDATE user_private SET phone_enc = NULL, phone_last4 = NULL WHERE user_id = $1`, [userId]);
   }
 
-  async notificationPrefs(userId: string) {
+  async notificationPrefs(userId: string): Promise<NotificationPrefs> {
     const [row] = await this.db.query(
       `SELECT new_message AS "newMessage", expiry, plate_alert AS "plateAlert"
        FROM notification_prefs WHERE user_id = $1`,
@@ -81,7 +70,7 @@ export class UsersService {
     return row ?? { newMessage: true, expiry: true, plateAlert: true };
   }
 
-  async updateNotificationPrefs(userId: string, dto: NotificationPrefsDto) {
+  async updateNotificationPrefs(userId: string, dto: NotificationPrefsDto): Promise<NotificationPrefs> {
     await this.db.query(
       `INSERT INTO notification_prefs (user_id, new_message, expiry, plate_alert)
        VALUES ($1, COALESCE($2, true), COALESCE($3, true), COALESCE($4, true))

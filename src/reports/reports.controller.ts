@@ -1,6 +1,6 @@
 import { Body, Controller, Post } from '@nestjs/common';
 import { AuthUser, CurrentUser, RequireVerifiedEmail } from '../auth/auth.decorators';
-import { CreateReportDto } from './reports.dto';
+import { CreatedReport, CreateReportDto } from './reports.dto';
 import { ReportsService } from './reports.service';
 
 @Controller('reports')
@@ -9,7 +9,7 @@ export class ReportsController {
 
   @Post()
   @RequireVerifiedEmail()
-  create(@CurrentUser() user: AuthUser, @Body() dto: CreateReportDto) {
+  create(@CurrentUser() user: AuthUser, @Body() dto: CreateReportDto): Promise<CreatedReport> {
     return this.reports.create(user, dto);
   }
 }

@@ -7,7 +7,7 @@ import { ApiError } from '../common/errors/api-error';
 import { RateLimiter } from '../common/rate-limit/rate-limiter.service';
 import { MailService } from '../mail/mail.service';
 import { AuthUser } from './auth.decorators';
-import { LoginDto, RegisterDto } from './auth.dto';
+import { LoginDto, RegisterDto, TokenPair } from './auth.dto';
 import { randomToken, sha256 } from './crypto';
 
 const ACCESS_TTL = '15m';
@@ -16,11 +16,6 @@ const VERIFY_TTL_HOURS = 24;
 const RESET_TTL_HOURS = 1;
 // Yönetici MFA doğrulaması bu süre boyunca refresh ile taşınır; sonra panel kodu yeniden ister (FR-057).
 const MFA_SESSION_HOURS = 12;
-
-export interface TokenPair {
-  accessToken: string;
-  refreshToken: string;
-}
 
 interface RefreshRow {
   user_id: string;

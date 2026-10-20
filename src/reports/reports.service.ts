@@ -4,7 +4,7 @@ import { AuthUser } from '../auth/auth.decorators';
 import { audit } from '../common/audit/audit';
 import { ApiError } from '../common/errors/api-error';
 import { RateLimiter } from '../common/rate-limit/rate-limiter.service';
-import { CreateReportDto } from './reports.dto';
+import { CreatedReport, CreateReportDto } from './reports.dto';
 
 const invalidTarget = () =>
   new ApiError(HttpStatus.BAD_REQUEST, 'REPORT_INVALID_TARGET', 'Şikâyet edilecek ilan, kullanıcı veya konuşma bulunamadı.');
@@ -16,7 +16,7 @@ export class ReportsService {
     private readonly limiter: RateLimiter,
   ) {}
 
-  async create(user: AuthUser, dto: CreateReportDto) {
+  async create(user: AuthUser, dto: CreateReportDto): Promise<CreatedReport> {
     const targets = [dto.listingId, dto.userId, dto.conversationId].filter(Boolean);
     if (targets.length !== 1) {
       throw new ApiError(HttpStatus.BAD_REQUEST, 'VALIDATION_FAILED', 'İlan, kullanıcı veya konuşmadan yalnızca biri seçilmeli.', {
