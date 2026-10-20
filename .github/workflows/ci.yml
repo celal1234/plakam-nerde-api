@@ -31,3 +31,14 @@ jobs:
       - run: pnpm test
       - run: pnpm test:e2e
       - run: pnpm audit --prod --audit-level high
+
+  # Coolify'ın kuracağı imajın derlendiğini ve ayağa kalktığını doğrular.
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker compose build api
+      - run: JWT_SECRET=ci-docker-secret-ci-docker-secret-1234 docker compose up -d --wait
+      - run: curl -fsS localhost:3000/api/v1/health
+      - if: failure()
+        run: docker compose logs api
