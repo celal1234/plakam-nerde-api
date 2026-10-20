@@ -21,6 +21,8 @@ export class ApiExceptionFilter implements ExceptionFilter {
     const req = host.switchToHttp().getRequest<Request>();
 
     if (exception instanceof ApiError) {
+      const retryAfter = exception.details?.retryAfter;
+      if (typeof retryAfter === 'number') res.setHeader('Retry-After', String(retryAfter));
       res.status(exception.getStatus()).json({
         error: { code: exception.code, message: exception.message, details: exception.details },
       });

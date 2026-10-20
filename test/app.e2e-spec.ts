@@ -1,19 +1,14 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { INestApplication } from '@nestjs/common';
-import { Test } from '@nestjs/testing';
 import request from 'supertest';
-import { AppModule } from '../src/app.module';
-import { setupApp } from '../src/app.setup';
+import { createApp } from './support/app';
 
 // Gerçek PostGIS veritabanı ister: DATABASE_URL ve REDIS_URL ortamda tanımlı olmalı.
 describe('API (e2e)', () => {
   let app: INestApplication;
 
   beforeAll(async () => {
-    const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
-    app = moduleRef.createNestApplication();
-    setupApp(app);
-    await app.init();
+    ({ app } = await createApp());
   });
 
   afterAll(() => app.close());

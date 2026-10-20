@@ -19,9 +19,21 @@ Testler: `pnpm test` (birim), `pnpm test:e2e` (çalışan PostGIS + Redis ister)
 1. **Veritabanı:** Coolify → New Resource → Database → PostgreSQL. İmajı `postgis/postgis:16-3.5` yap. Zamanlanmış yedeği aç ve hedef olarak sunucudan ayrı bir S3 alanı seç.
 2. **Redis:** New Resource → Database → Redis.
 3. **API:** New Resource → GitHub reposu → Build Pack: Dockerfile. Port `3000`, Health Check yolu `/api/v1/health`.
-4. **Ortam değişkenleri (API):** `DATABASE_URL` ve `REDIS_URL` için Coolify'ın verdiği iç bağlantı adreslerini kullan; `NODE_ENV=production`, `CORS_ORIGINS` web/admin alan adları.
+4. **Ortam değişkenleri (API):** `DATABASE_URL` ve `REDIS_URL` için Coolify'ın verdiği iç bağlantı adreslerini kullan; `NODE_ENV=production`, `JWT_SECRET` (`openssl rand -base64 48`), `APP_URL`, `SMTP_URL`, `MAIL_FROM`, `CORS_ORIGINS` (web/admin alan adları). Tam liste: `.env.example`.
 5. **Alan adı:** API'ye `https://api.<alan-adı>` ver; Coolify sertifikayı Let's Encrypt ile kendi alır.
 6. Veritabanı ve Redis portlarını dışarıya açma (Coolify'da "Make it publicly available" kapalı kalsın).
+
+## Hazır uçlar (`/api/v1`)
+
+| Uç | Not |
+|---|---|
+| `GET /health` | Veritabanı bağlantısı |
+| `POST /auth/register` · `/auth/verify-email` · `/auth/verify-email/resend` | Kayıt her durumda aynı yanıtı verir (e-posta varlığı sızmaz) |
+| `POST /auth/login` · `/auth/refresh` · `/auth/logout` | Access JWT 15 dk; refresh 30 gün, her kullanımda yenilenir, tekrar kullanılırsa tüm zincir iptal |
+| `POST /auth/password/forgot` · `/auth/password/reset` | Sıfırlama tüm oturumları kapatır |
+| `GET/PATCH/DELETE /me` · `GET/PATCH /me/notification-prefs` | Silme kimlik bilgilerini hemen anonimleştirir |
+
+Henüz yok: Google/Apple girişi, telefon (`/me/phone`), cihaz token'ı (`/me/devices`), sızmış şifre kontrolü.
 
 ## Yapı
 

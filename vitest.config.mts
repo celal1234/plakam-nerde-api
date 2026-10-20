@@ -8,7 +8,15 @@ export default defineConfig({
     globals: false,
     projects: [
       { extends: true, test: { name: 'unit', include: ['src/**/*.spec.ts'] } },
-      { extends: true, test: { name: 'e2e', include: ['test/**/*.e2e-spec.ts'], fileParallelism: false } },
+      {
+        extends: true,
+        test: {
+          name: 'e2e',
+          include: ['test/**/*.e2e-spec.ts'],
+          fileParallelism: false,
+          env: { JWT_SECRET: 'e2e-test-secret-e2e-test-secret-1234', APP_URL: 'https://plakamnerde.test' },
+        },
+      },
     ],
   },
 });

@@ -19,6 +19,7 @@ jobs:
     env:
       DATABASE_URL: postgres://plakam:plakam@localhost:5432/plakam
       REDIS_URL: redis://localhost:6379
+      JWT_SECRET: ci-test-secret-ci-test-secret-ci-test-1234
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4

@@ -1,7 +1,9 @@
 import { Controller, Get } from '@nestjs/common';
 import { HealthCheck, HealthCheckService, TypeOrmHealthIndicator } from '@nestjs/terminus';
+import { Public } from '../auth/auth.decorators';
 
 // Coolify ve izleme bu adresi yoklar.
+@Public()
 @Controller('health')
 export class HealthController {
   constructor(

@@ -7,6 +7,10 @@ services:
       DATABASE_URL: postgres://plakam:${POSTGRES_PASSWORD:-plakam}@db:5432/plakam
       REDIS_URL: redis://:${REDIS_PASSWORD:-plakam}@redis:6379
       CORS_ORIGINS: ${CORS_ORIGINS:-}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET tanımlanmalı}
+      APP_URL: ${APP_URL:-http://localhost:3000}
+      SMTP_URL: ${SMTP_URL:-}
+      MAIL_FROM: ${MAIL_FROM:-Plakam Nerde? <no-reply@localhost>}
     ports: ["3000:3000"]
     depends_on:
       db: { condition: service_healthy }
