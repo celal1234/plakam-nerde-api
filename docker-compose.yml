@@ -17,6 +17,7 @@ services:
       S3_BUCKET: plakam-photos
       S3_ACCESS_KEY: ${S3_ACCESS_KEY:-}
       S3_SECRET_KEY: ${S3_SECRET_KEY:-}
+      DATA_ENCRYPTION_KEY: ${DATA_ENCRYPTION_KEY:-}
     ports: ["3000:3000"]
     depends_on:
       db: { condition: service_healthy }

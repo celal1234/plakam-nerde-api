@@ -30,9 +30,10 @@ Fotoğraf akışı: `POST /photos/upload-url` → telefon dosyayı imzalı adres
    garage key create plakam-api                    # çıkan Key ID ve Secret key'i sakla
    garage bucket allow --read --write plakam-photos --key plakam-api
    ```
-5. **Ortam değişkenleri (API):** `DATABASE_URL` ve `REDIS_URL` için Coolify'ın verdiği iç bağlantı adreslerini kullan; `NODE_ENV=production`, `JWT_SECRET` (`openssl rand -base64 48`), `APP_URL`, `SMTP_URL`, `MAIL_FROM`, `CORS_ORIGINS` (web/admin alan adları), `S3_ENDPOINT=https://s3.<alan-adı>`, `S3_ACCESS_KEY`, `S3_SECRET_KEY` (yukarıdaki anahtar). Tam liste: `.env.example`.
+5. **Ortam değişkenleri (API):** `DATABASE_URL` ve `REDIS_URL` için Coolify'ın verdiği iç bağlantı adreslerini kullan; `NODE_ENV=production`, `JWT_SECRET` (`openssl rand -base64 48`), `APP_URL`, `SMTP_URL`, `MAIL_FROM`, `CORS_ORIGINS` (web/admin alan adları), `S3_ENDPOINT=https://s3.<alan-adı>`, `S3_ACCESS_KEY`, `S3_SECRET_KEY` (yukarıdaki anahtar), `DATA_ENCRYPTION_KEY` (`openssl rand -base64 32`; yönetici MFA sırrı ve ileride telefon numarası bununla şifrelenir, **kaybedilir veya değiştirilirse eski kayıtlar çözülemez**, Coolify dışında da güvenli bir yerde sakla). Tam liste: `.env.example`.
 6. **Alan adı:** API'ye `https://api.<alan-adı>` ver; Coolify sertifikayı Let's Encrypt ile kendi alır.
 7. Veritabanı, Redis ve Garage yönetim portlarını dışarıya açma (Coolify'da "Make it publicly available" kapalı kalsın).
+8. **İlk yönetici:** Uygulamadan normal hesap aç ve e-postanı doğrula, sonra API konteynerinin terminalinde `node dist/cli/admin.js grant <e-posta>`. Panelde ilk girişte `POST /admin/mfa/setup` ile verilen QR'ı doğrulama uygulamasına (Google Authenticator, Authy, 1Password) ekle ve kodu `POST /admin/mfa/verify` ile gir. Telefonunu kaybeden yönetici için `node dist/cli/admin.js reset-mfa <e-posta>`, yetkiyi almak için `revoke`.
 
 ## Hazır uçlar (`/api/v1`)
 
@@ -43,18 +44,34 @@ Fotoğraf akışı: `POST /photos/upload-url` → telefon dosyayı imzalı adres
 | `POST /auth/login` · `/auth/refresh` · `/auth/logout` | Access JWT 15 dk; refresh 30 gün, her kullanımda yenilenir, tekrar kullanılırsa tüm zincir iptal |
 | `POST /auth/password/forgot` · `/auth/password/reset` | Sıfırlama tüm oturumları kapatır |
 | `GET/PATCH/DELETE /me` · `GET/PATCH /me/notification-prefs` | Silme kimlik bilgilerini hemen anonimleştirir |
-| `POST /photos/upload-url` | 5 dk geçerli imzalı S3 yükleme adresi; JPEG/PNG/HEIC, en fazla 10 MB |
+| `POST /photos/upload-url` | 5 dk geçerli imzalı S3 yükleme adresi; JPEG/PNG (HEIC'i uygulama yüklemeden önce JPEG'e çevirir), en fazla 10 MB |
 | `GET /plates/search?q=` | Üyeliksiz; IP başına dakikada 20; aktifler önce |
 | `POST /plates` · `POST /plates/check-duplicate` | Yaklaşık konum 200–500 m kaydırılır; 2 km içinde aynı plaka uyarısı; resmî plaka onaya düşer |
 | `GET /plates/{id}` · `PATCH /plates/{id}` (`If-Match: <version>`) | Kesin konum hiçbir herkese açık yanıtta yok |
 | `POST /plates/{id}/extend` · `/close` · `/handover` · `GET /me/listings` | Tek uzatma, süre dolduktan en geç 30 gün sonra |
-
 | `POST/GET /conversations` · `GET/POST /conversations/{id}/messages` · `POST /conversations/{id}/read` | Aynı ilana ikinci başlatma aynı konuşmayı döner; `clientId` ile tekrar gönderim çift kayıt açmaz; konumu yalnızca ilan sahibi paylaşır; dakikada 20 mesaj, günde 20 yeni konuşma |
 | `POST /plates/{id}/handover-confirm` | Teslim konuşmasının arayan tarafı 7 gün içinde bir kez; "hayır" yönetici incelemesine düşer |
 | `POST /users/{id}/block` | İki yönde de yazışmayı kapatır |
+| `POST /reports` | İlan, kullanıcı veya konuşma şikâyeti; aynı şeye ikinci kez 409; günde 20. Bir ilan 3 farklı kullanıcıdan açık şikâyet alınca yönetici kararına kadar gizlenir (eşik `settings.report_hide_threshold`) |
 | `wss://…/api/v1/ws` | İlk mesaj `{"type":"auth","token":"<access JWT>"}`; yanıt `{"type":"ready"}`. Olaylar: `message.new`, `message.read`. Kopunca `GET …/messages?after=<sonId>` ile eşitlenir |
 
 Zamanlanmış işler (BullMQ, Türkiye saati, `WORKER_ENABLED=true` olan kopyada): `expire-listings` saatlik, `expiry-reminders` 09:00 (süre bitmeden 3 gün önce tek e-posta), `retention-purge` 03:00 (90 günü dolan kesin konumlar, silinen hesapların ilanları, eski token'lar, 2 yılı geçen denetim kayıtları), `orphan-photos` 03:30 (24 saatte ilana bağlanmayan fotoğraflar).
+
+### Yönetici uçları (`/api/v1/admin`)
+
+Hepsi yönetici rolü **ve** MFA'lı oturum ister (yoksa 403 `ADMIN_ONLY` / `ADMIN_MFA_REQUIRED`). Rol her istekte veritabanından okunur. MFA'lı oturum 12 saat geçerli, sonra panel kodu yeniden ister. Tüm işlemler ve kişisel veri görüntülemeleri `audit_log`'a IP ile yazılır.
+
+| Uç | Not |
+|---|---|
+| `POST /admin/mfa/setup` · `POST /admin/mfa/verify` `{code}` | Yalnız rol yeterli. Kurulum 10 dk içinde doğrulanmalı; doğrulama MFA'lı yeni token çifti döner; aynı kod iki kez geçmez; 5 dakikada 5 deneme |
+| `GET /admin/listings?plate=&status=&city=&from=&to=&limit=&offset=` · `GET /admin/listings/{id}` | `status`: pending, active, handed_over, closed, expired, removed, hidden. Plaka baştan eşleşir. Ayrıntıda fotoğraflar ve şikâyetler |
+| `POST /admin/listings/{id}/approve` · `/reject` `{reason}` · `/remove` `{reason}` | Onayda süre o andan başlar. Ret/kaldırmada sebep sahibine e-postayla gider; kaldırılan ilanın konuşmaları salt okunur olur, açık şikâyetleri kapanır |
+| `GET /admin/reports?status=open` · `POST /admin/reports/{id}/resolve` `{action, days?, note?}` | `none` (gizleme eşiğin altına inerse kalkar), `remove_listing`, `restrict_user` (kullanıcı, ilan sahibi veya konuşmadaki karşı taraf) |
+| `POST /admin/users/{id}/restrict` `{days: 1\|7\|30\|null}` · `/unrestrict` | `null` süresiz. Kısıtlı kullanıcı ilan veremez, konuşma başlatamaz, mesaj yazamaz; arama serbest. Kullanıcıya e-posta gider |
+| `GET /admin/listings/{id}/exact-location` · `GET /admin/users/{id}/phone` | Her çağrı denetim kaydına yazılır |
+| `GET /admin/metrics?from=&to=` | Varsayılan son 30 gün: günlük yeni ilan, arama, sonuç bulunan arama ve oranı, teslim. Arama metni saklanmaz, yalnızca sayılır |
+
+Panel arayüzü ayrı bir web işi; ayrı alt alan adında (`admin.<alan-adı>`) yayınlanması ve `CORS_ORIGINS`'e eklenmesi yeterli.
 
 Henüz yok: push bildirimi (FCM), Google/Apple girişi, telefon (`/me/phone`), cihaz token'ı (`/me/devices`), sızmış şifre kontrolü, plaka alarmı.
 

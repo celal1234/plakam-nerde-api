@@ -14,6 +14,8 @@ const ACCESS_TTL = '15m';
 const REFRESH_TTL_DAYS = 30;
 const VERIFY_TTL_HOURS = 24;
 const RESET_TTL_HOURS = 1;
+// Yönetici MFA doğrulaması bu süre boyunca refresh ile taşınır; sonra panel kodu yeniden ister (FR-057).
+const MFA_SESSION_HOURS = 12;
 
 export interface TokenPair {
   accessToken: string;
@@ -27,6 +29,7 @@ interface RefreshRow {
   expires_at: Date;
   used_at: Date | null;
   revoked_at: Date | null;
+  mfa_at: Date | null;
 }
 
 interface UserRow {
@@ -146,7 +149,7 @@ export class AuthService {
         this.assertCanSignIn(user);
 
         await tx.query(`UPDATE refresh_tokens SET used_at = now() WHERE id = $1`, [id]);
-        return this.issueTokens(tx, user, row.family_id);
+        return this.issueTokens(tx, user, row.family_id, row.mfa_at);
       });
     } finally {
       // Daha önce kullanılmış bir token tekrar geldiyse çalınmış olabilir: tüm zinciri iptal et (T6 §5).
@@ -197,15 +200,27 @@ export class AuthService {
     }
   }
 
-  private async issueTokens(tx: EntityManager, user: UserRow, familyId: string): Promise<TokenPair> {
+  // TOTP kodu doğrulanmış yönetici için `mfa` işaretli yeni bir oturum zinciri açar.
+  async startMfaSession(userId: string): Promise<TokenPair> {
+    const [user]: UserRow[] = await this.db.query(
+      `SELECT id, role, status, email_verified, password_hash FROM users WHERE id = $1 AND deleted_at IS NULL`,
+      [userId],
+    );
+    if (!user) throw invalidSession();
+    this.assertCanSignIn(user);
+    return this.issueTokens(this.db.manager, user, crypto.randomUUID(), new Date());
+  }
+
+  private async issueTokens(tx: EntityManager, user: UserRow, familyId: string, mfaAt: Date | null = null): Promise<TokenPair> {
     const secret = randomToken();
     const [{ id }]: { id: string }[] = await tx.query(
-      `INSERT INTO refresh_tokens (user_id, family_id, token_hash, expires_at)
-       VALUES ($1, $2, $3, now() + make_interval(days => $4)) RETURNING id`,
-      [user.id, familyId, sha256(secret), REFRESH_TTL_DAYS],
+      `INSERT INTO refresh_tokens (user_id, family_id, token_hash, expires_at, mfa_at)
+       VALUES ($1, $2, $3, now() + make_interval(days => $4), $5) RETURNING id`,
+      [user.id, familyId, sha256(secret), REFRESH_TTL_DAYS, mfaAt],
     );
+    const mfa = user.role === 'admin' && !!mfaAt && Date.now() - mfaAt.getTime() < MFA_SESSION_HOURS * 3600_000;
     const accessToken = await this.jwt.signAsync(
-      { sub: user.id, role: user.role, ev: user.email_verified },
+      { sub: user.id, role: user.role, ev: user.email_verified, ...(mfa ? { mfa: true } : {}) },
       { expiresIn: ACCESS_TTL },
     );
     return { accessToken, refreshToken: `${id}.${secret}` };

@@ -21,6 +21,7 @@ export default defineConfig({
             S3_ENDPOINT: 'http://localhost:3900',
             S3_ACCESS_KEY: 'test',
             S3_SECRET_KEY: 'test',
+            DATA_ENCRYPTION_KEY: 'MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=',
           },
         },
       },

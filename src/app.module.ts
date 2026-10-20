@@ -3,7 +3,9 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { envSchema } from './config/env.validation';
 import { dataSourceOptions } from './database/data-source';
+import { AdminModule } from './admin/admin.module';
 import { AuthModule } from './auth/auth.module';
+import { CryptoModule } from './common/crypto/crypto.module';
 import { RateLimitModule } from './common/rate-limit/rate-limit.module';
 import { ConversationsModule } from './conversations/conversations.module';
 import { HealthModule } from './health/health.module';
@@ -14,6 +16,7 @@ import { MaintenanceModule } from './maintenance/maintenance.module';
 import { QueueModule } from './queue/queue.module';
 import { RealtimeModule } from './realtime/realtime.module';
 import { RedisModule } from './redis/redis.module';
+import { ReportsModule } from './reports/reports.module';
 import { StorageModule } from './storage/storage.module';
 import { UsersModule } from './users/users.module';
 
@@ -32,6 +35,7 @@ import { UsersModule } from './users/users.module';
     QueueModule,
     RateLimitModule,
     MailModule,
+    CryptoModule,
     StorageModule,
     HealthModule,
     AuthModule,
@@ -41,6 +45,8 @@ import { UsersModule } from './users/users.module';
     ListingsModule,
     ConversationsModule,
     MaintenanceModule,
+    ReportsModule,
+    AdminModule,
   ],
 })
 export class AppModule {}

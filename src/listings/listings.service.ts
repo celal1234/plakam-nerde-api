@@ -5,6 +5,7 @@ import { AuthUser } from '../auth/auth.decorators';
 import { ApiError } from '../common/errors/api-error';
 import { normalizePlate } from '../common/plate/plate';
 import { RateLimiter } from '../common/rate-limit/rate-limiter.service';
+import { assertCanWrite } from '../common/restriction';
 import { PHOTOS, PhotoJob } from '../queue/queue.module';
 import { RealtimeService } from '../realtime/realtime.service';
 import { StorageService } from '../storage/storage.service';
@@ -84,6 +85,7 @@ export class ListingsService {
        LIMIT 50`,
       [normalized],
     );
+    await this.countSearch(rows.length > 0);
     const cards = await Promise.all(rows.map((r) => this.toCard(r)));
     return {
       query: { normalized },
@@ -121,6 +123,7 @@ export class ListingsService {
     if (!plate.normalized) throw new ApiError(HttpStatus.BAD_REQUEST, 'PLATE_REQUIRED', 'Plaka numarası girin.');
     this.assertInTurkey(dto.location);
     await this.assertNotFuture(dto.foundAt);
+    await assertCanWrite(this.db, user.id);
     await this.limiter.consume(`listing-create:${user.id}`, 10, 86400);
 
     const { id, duplicates } = await this.db.transaction(async (tx) => {
@@ -359,6 +362,16 @@ export class ListingsService {
          AND ST_DWithin(pl.exact_point, ST_SetSRID(ST_MakePoint($2, $3), 4326)::geography, $4)
        ORDER BY l.created_at DESC LIMIT 10`,
       [plate, loc.lng, loc.lat, radius],
+    );
+  }
+
+  // FR-074 panel metrikleri: günlük arama ve sonuç bulunan arama sayısı (İstanbul günü). Sorgu metni saklanmaz.
+  private async countSearch(hit: boolean): Promise<void> {
+    await this.db.query(
+      `INSERT INTO metric_daily (day, key, value)
+       SELECT (now() AT TIME ZONE 'Europe/Istanbul')::date, k, 1 FROM unnest($1::text[]) AS k
+       ON CONFLICT (day, key) DO UPDATE SET value = metric_daily.value + 1`,
+      [hit ? ['search', 'search_hit'] : ['search']],
     );
   }
 

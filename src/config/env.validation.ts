@@ -21,5 +21,12 @@ export const envSchema = Joi.object({
   S3_SECRET_KEY: Joi.string().allow('').optional(),
   // Arka plan işleri (fotoğraf işleme) bu süreçte de çalışsın mı; ileride ayrı bir worker konteynerine taşınabilir.
   WORKER_ENABLED: Joi.boolean().default(true),
+  // Telefon numarası ve yönetici MFA sırrı için AES-256-GCM anahtarı: 32 baytın base64 hâli (`openssl rand -base64 32`).
+  // Tanımlı değilse yönetici MFA kurulumu 503 döner. Değiştirilirse eski kayıtlar çözülemez.
+  DATA_ENCRYPTION_KEY: Joi.string()
+    .base64()
+    .custom((v: string, h) => (Buffer.from(v, 'base64').length === 32 ? v : h.error('any.invalid')))
+    .allow('')
+    .optional(),
   MAIL_FROM: Joi.string().default('Plakam Nerde? <no-reply@localhost>'),
 });
