@@ -6,6 +6,7 @@ import { ApiError } from '../common/errors/api-error';
 import { normalizePlate } from '../common/plate/plate';
 import { RateLimiter } from '../common/rate-limit/rate-limiter.service';
 import { PHOTOS, PhotoJob } from '../queue/queue.module';
+import { RealtimeService } from '../realtime/realtime.service';
 import { StorageService } from '../storage/storage.service';
 import { CheckDuplicateDto, CreateListingDto, LocationDto, UpdateListingDto } from './listings.dto';
 
@@ -68,6 +69,7 @@ export class ListingsService {
     private readonly limiter: RateLimiter,
     private readonly storage: StorageService,
     @Inject(PHOTOS) private readonly photoQueue: Queue<PhotoJob>,
+    private readonly realtime: RealtimeService,
   ) {}
 
   async search(q: string, ip: string) {
@@ -249,14 +251,61 @@ export class ListingsService {
       const [conv] = await this.db.query(`SELECT 1 FROM conversations WHERE id = $1 AND listing_id = $2`, [conversationId, id]);
       if (!conv) throw new ApiError(HttpStatus.BAD_REQUEST, 'VALIDATION_FAILED', 'Konuşma bu ilana ait değil.');
     }
-    return this.finish(
+    const result = await this.finish(
       user,
       id,
       ['active'],
-      `status = 'handed_over', handover_conversation_id = $2, handover_confirmed = NULL`,
+      `status = 'handed_over', handover_conversation_id = $2, handover_confirmed = NULL, handed_over_at = now()`,
       [conversationId ?? null],
       'handed_over',
     );
+    if (conversationId) {
+      // FR-069: karşı tarafa konuşma içinde "teslim aldınız mı?" sorusu düşer.
+      const [message] = await this.db.query(
+        `WITH ins AS (
+           INSERT INTO messages (conversation_id, sender_id, kind, body, client_id)
+           VALUES ($1, NULL, 'system', $2, gen_random_uuid()) RETURNING *)
+         SELECT ins.id::text AS id, ins.conversation_id AS "conversationId", NULL AS "senderId", ins.kind, ins.body,
+                NULL AS point, ins.client_id AS "clientId", ins.created_at AS "createdAt", NULL AS "readAt"
+         FROM ins`,
+        [conversationId, 'İlan sahibi plakayı teslim ettiğini bildirdi. Plakanızı teslim aldınız mı?'],
+      );
+      await this.db.query(`UPDATE conversations SET last_message_at = now() WHERE id = $1`, [conversationId]);
+      const [conv]: { owner_id: string; seeker_id: string }[] = await this.db.query(
+        `SELECT owner_id, seeker_id FROM conversations WHERE id = $1`,
+        [conversationId],
+      );
+      await this.realtime.publish([conv.owner_id, conv.seeker_id], { type: 'message.new', message });
+    }
+    return result;
+  }
+
+  // FR-069: teslim konuşmasının arayan tarafı 7 gün içinde bir kez yanıtlar. "Hayır" yönetici incelemesine düşer.
+  async confirmHandover(user: AuthUser, id: string, confirmed: boolean) {
+    return this.db.transaction(async (tx) => {
+      const [row]: { allowed: boolean }[] = await tx.query(
+        `SELECT (l.status = 'handed_over' AND l.handover_confirmed IS NULL
+                 AND l.handed_over_at > now() - interval '7 days' AND c.seeker_id = $2) AS allowed
+         FROM listings l JOIN conversations c ON c.id = l.handover_conversation_id
+         WHERE l.id = $1 FOR UPDATE OF l`,
+        [id, user.id],
+      );
+      if (!row?.allowed) {
+        throw new ApiError(HttpStatus.CONFLICT, 'HANDOVER_CONFIRM_NOT_ALLOWED', 'Bu ilan için teslim onayı verilemez.');
+      }
+      await tx.query(
+        `UPDATE listings SET handover_confirmed = $2, version = version + 1, updated_at = now() WHERE id = $1`,
+        [id, confirmed],
+      );
+      if (!confirmed) {
+        await tx.query(
+          `INSERT INTO reports (reporter_id, listing_id, reason, note) VALUES ($1, $2, 'other', $3)
+           ON CONFLICT DO NOTHING`,
+          [user.id, id, 'Teslim onayı: arayan kişi plakayı teslim almadığını bildirdi (FR-069).'],
+        );
+      }
+      return { id, handoverConfirmed: confirmed };
+    });
   }
 
   private async finish(user: AuthUser, id: string, from: string[], set: string, params: unknown[], to: string) {

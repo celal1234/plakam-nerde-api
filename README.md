@@ -50,10 +50,13 @@ Fotoğraf akışı: `POST /photos/upload-url` → telefon dosyayı imzalı adres
 | `POST /plates/{id}/extend` · `/close` · `/handover` · `GET /me/listings` | Tek uzatma, süre dolduktan en geç 30 gün sonra |
 
 | `POST/GET /conversations` · `GET/POST /conversations/{id}/messages` · `POST /conversations/{id}/read` | Aynı ilana ikinci başlatma aynı konuşmayı döner; `clientId` ile tekrar gönderim çift kayıt açmaz; konumu yalnızca ilan sahibi paylaşır; dakikada 20 mesaj, günde 20 yeni konuşma |
+| `POST /plates/{id}/handover-confirm` | Teslim konuşmasının arayan tarafı 7 gün içinde bir kez; "hayır" yönetici incelemesine düşer |
 | `POST /users/{id}/block` | İki yönde de yazışmayı kapatır |
 | `wss://…/api/v1/ws` | İlk mesaj `{"type":"auth","token":"<access JWT>"}`; yanıt `{"type":"ready"}`. Olaylar: `message.new`, `message.read`. Kopunca `GET …/messages?after=<sonId>` ile eşitlenir |
 
-Henüz yok: push bildirimi (FCM), teslim onayı (`/plates/{id}/handover-confirm`), Google/Apple girişi, telefon (`/me/phone`), cihaz token'ı (`/me/devices`), sızmış şifre kontrolü, zamanlanmış işler (süre dolumu şimdilik sorgu anında hesaplanıyor), teslim onayı, plaka alarmı.
+Zamanlanmış işler (BullMQ, Türkiye saati, `WORKER_ENABLED=true` olan kopyada): `expire-listings` saatlik, `expiry-reminders` 09:00 (süre bitmeden 3 gün önce tek e-posta), `retention-purge` 03:00 (90 günü dolan kesin konumlar, silinen hesapların ilanları, eski token'lar, 2 yılı geçen denetim kayıtları), `orphan-photos` 03:30 (24 saatte ilana bağlanmayan fotoğraflar).
+
+Henüz yok: push bildirimi (FCM), Google/Apple girişi, telefon (`/me/phone`), cihaz token'ı (`/me/devices`), sızmış şifre kontrolü, plaka alarmı.
 
 ## Yapı
 
