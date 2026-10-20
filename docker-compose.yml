@@ -1,0 +1,40 @@
+# Yerelde: `docker compose up -d db redis` ve `pnpm start:dev`.
+# Coolify'da: bu dosyayla "Docker Compose" kaynağı olarak da kurulabilir; parolaları Coolify ortam değişkenlerinden ver.
+services:
+  api:
+    build: .
+    environment:
+      DATABASE_URL: postgres://plakam:${POSTGRES_PASSWORD:-plakam}@db:5432/plakam
+      REDIS_URL: redis://:${REDIS_PASSWORD:-plakam}@redis:6379
+      CORS_ORIGINS: ${CORS_ORIGINS:-}
+    ports: ["3000:3000"]
+    depends_on:
+      db: { condition: service_healthy }
+      redis: { condition: service_healthy }
+
+  db:
+    image: postgis/postgis:16-3.5
+    environment:
+      POSTGRES_DB: plakam
+      POSTGRES_USER: plakam
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-plakam}
+    ports: ["5432:5432"]
+    volumes: [db-data:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U plakam -d plakam"]
+      interval: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:-plakam}", "--appendonly", "yes"]
+    ports: ["6379:6379"]
+    volumes: [redis-data:/data]
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-plakam}", "ping"]
+      interval: 5s
+      retries: 10
+
+volumes:
+  db-data:
+  redis-data:

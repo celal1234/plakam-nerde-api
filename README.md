@@ -1,0 +1,30 @@
+# Plakam Nerde? API
+
+NestJS 12 + PostgreSQL 16/PostGIS + Redis. Tasarım: `ekip-plani/T6-teknik-sartname-v1.md`.
+
+## Yerelde çalıştırma
+
+```bash
+cp .env.example .env
+docker compose up -d db redis
+pnpm install
+pnpm start:dev          # açılışta migration'lar otomatik çalışır
+curl localhost:3000/api/v1/health
+```
+
+Testler: `pnpm test` (birim), `pnpm test:e2e` (çalışan PostGIS + Redis ister).
+
+## Coolify'a kurulum (Almanya sunucusu)
+
+1. **Veritabanı:** Coolify → New Resource → Database → PostgreSQL. İmajı `postgis/postgis:16-3.5` yap. Zamanlanmış yedeği aç ve hedef olarak sunucudan ayrı bir S3 alanı seç.
+2. **Redis:** New Resource → Database → Redis.
+3. **API:** New Resource → GitHub reposu → Build Pack: Dockerfile. Port `3000`, Health Check yolu `/api/v1/health`.
+4. **Ortam değişkenleri (API):** `DATABASE_URL` ve `REDIS_URL` için Coolify'ın verdiği iç bağlantı adreslerini kullan; `NODE_ENV=production`, `CORS_ORIGINS` web/admin alan adları.
+5. **Alan adı:** API'ye `https://api.<alan-adı>` ver; Coolify sertifikayı Let's Encrypt ile kendi alır.
+6. Veritabanı ve Redis portlarını dışarıya açma (Coolify'da "Make it publicly available" kapalı kalsın).
+
+## Yapı
+
+- `src/database/migrations/` — şema değişiklikleri; yenisi `migrations/index.ts`'e eklenir.
+- `src/common/errors/` — T6 §4 hata biçimi `{ error: { code, message, details } }`.
+- `src/common/plate/` — plaka normalizasyonu ve esnek format kontrolü (T2).
