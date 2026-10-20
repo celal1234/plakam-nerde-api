@@ -1,5 +1,5 @@
 import { Transform } from 'class-transformer';
-import { IsBoolean, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import { IsBoolean, IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 
 export class UpdateMeDto {
   @IsOptional()
@@ -12,4 +12,8 @@ export class NotificationPrefsDto {
   @IsOptional() @IsBoolean() newMessage?: boolean;
   @IsOptional() @IsBoolean() expiry?: boolean;
   @IsOptional() @IsBoolean() plateAlert?: boolean;
+}
+
+export class PhoneDto {
+  @IsString() @IsNotEmpty() @MaxLength(25) phone: string;
 }

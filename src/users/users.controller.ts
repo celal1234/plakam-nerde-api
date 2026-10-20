@@ -1,6 +1,6 @@
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Patch } from '@nestjs/common';
 import { AuthUser, CurrentUser } from '../auth/auth.decorators';
-import { NotificationPrefsDto, UpdateMeDto } from './users.dto';
+import { NotificationPrefsDto, PhoneDto, UpdateMeDto } from './users.dto';
 import { UsersService } from './users.service';
 
 @Controller('me')
@@ -22,6 +22,22 @@ export class UsersController {
   async remove(@CurrentUser() user: AuthUser) {
     await this.users.deleteAccount(user.id);
     return { status: 'deleted' };
+  }
+
+  @Get('phone')
+  phone(@CurrentUser() user: AuthUser) {
+    return this.users.phone(user.id);
+  }
+
+  @Patch('phone')
+  setPhone(@CurrentUser() user: AuthUser, @Body() dto: PhoneDto) {
+    return this.users.setPhone(user.id, dto.phone);
+  }
+
+  @Delete('phone')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  deletePhone(@CurrentUser() user: AuthUser) {
+    return this.users.deletePhone(user.id);
   }
 
   @Get('notification-prefs')
