@@ -1,6 +1,7 @@
 import { HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { Queue } from 'bullmq';
 import { DataSource, EntityManager } from 'typeorm';
+import { AlertsService } from '../alerts/alerts.service';
 import { AuthUser } from '../auth/auth.decorators';
 import { ApiError } from '../common/errors/api-error';
 import { normalizePlate } from '../common/plate/plate';
@@ -74,6 +75,7 @@ export class ListingsService {
     @Inject(PHOTOS) private readonly photoQueue: Queue<PhotoJob>,
     private readonly realtime: RealtimeService,
     private readonly cipher: DataCipher,
+    private readonly alerts: AlertsService,
   ) {}
 
   async search(q: string, ip: string) {
@@ -181,6 +183,9 @@ export class ListingsService {
 
     // İşleme ilan yayınlandıktan sonra başlar; jobId fotoğraf kimliği olduğu için aynı fotoğraf iki kez kuyruğa girmez.
     await this.photoQueue.addBulk(dto.photoIds.map((photoId) => ({ name: 'process', data: { photoId }, opts: { jobId: photoId } })));
+
+    // Onay bekleyen (resmî plaka) ilanda alarm, yönetici onayladığında tetiklenir.
+    if (!dto.isOfficialPlate) await this.alerts.listingPublished(id);
 
     const warnings: string[] = [];
     if (!plate.formatOk) warnings.push('PLATE_FORMAT');

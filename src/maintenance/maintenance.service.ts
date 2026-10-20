@@ -92,6 +92,8 @@ export class MaintenanceService {
       deletedOwnersListings: await count(`
         UPDATE listings SET status = 'closed', closed_reason = 'other', version = version + 1, updated_at = now()
         WHERE status IN ('active', 'pending') AND owner_id IN (SELECT id FROM users WHERE deleted_at IS NOT NULL)`),
+      // Süresi dolan plaka alarmları (FR-062: 90 gün).
+      plateAlerts: await count(`DELETE FROM plate_alerts WHERE expires_at < now()`),
       authTokens: await count(`DELETE FROM auth_tokens WHERE expires_at < now() - interval '7 days'`),
       refreshTokens: await count(`DELETE FROM refresh_tokens WHERE expires_at < now() - interval '7 days'`),
       auditLog: await count(`DELETE FROM audit_log WHERE created_at < now() - interval '${AUDIT_RETENTION}'`),
