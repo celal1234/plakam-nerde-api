@@ -1,5 +1,6 @@
 import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
+import { CreateBucketCommand, S3Client } from '@aws-sdk/client-s3';
 import { Redis } from 'ioredis';
 import request from 'supertest';
 import { AppModule } from '../../src/app.module';
@@ -31,6 +32,16 @@ export async function createApp(): Promise<{ app: INestApplication; mail: FakeMa
     .overrideProvider(MailService)
     .useValue(mail)
     .compile();
+  // Testler S3 uyumlu yerel bir sunucu ister (CI'da moto); kova yoksa oluşturulur.
+  const s3 = new S3Client({
+    endpoint: process.env.S3_ENDPOINT,
+    region: 'garage',
+    forcePathStyle: true,
+    credentials: { accessKeyId: 'test', secretAccessKey: 'test' },
+  });
+  await s3.send(new CreateBucketCommand({ Bucket: 'plakam-photos' })).catch((e) => {
+    if (!['BucketAlreadyOwnedByYou', 'BucketAlreadyExists'].includes(e.name)) throw e;
+  });
   const app = moduleRef.createNestApplication();
   setupApp(app);
   await app.init();

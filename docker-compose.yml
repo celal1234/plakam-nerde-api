@@ -11,6 +11,12 @@ services:
       APP_URL: ${APP_URL:-http://localhost:3000}
       SMTP_URL: ${SMTP_URL:-}
       MAIL_FROM: ${MAIL_FROM:-Plakam Nerde? <no-reply@localhost>}
+      # Garage ilk kurulumda anahtar ve kova oluşturulduktan sonra doldurulur (README).
+      S3_ENDPOINT: ${S3_ENDPOINT:-http://garage:3900}
+      S3_REGION: garage
+      S3_BUCKET: plakam-photos
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY:-}
+      S3_SECRET_KEY: ${S3_SECRET_KEY:-}
     ports: ["3000:3000"]
     depends_on:
       db: { condition: service_healthy }
@@ -39,6 +45,19 @@ services:
       interval: 5s
       retries: 10
 
+  garage:
+    image: dxflrs/garage:v2.4.1
+    environment:
+      GARAGE_RPC_SECRET: ${GARAGE_RPC_SECRET:-0000000000000000000000000000000000000000000000000000000000000000}
+      GARAGE_ADMIN_TOKEN: ${GARAGE_ADMIN_TOKEN:-local-admin-token}
+    ports: ["3900:3900"]
+    volumes:
+      - ./deploy/garage/garage.toml:/etc/garage.toml:ro
+      - garage-meta:/var/lib/garage/meta
+      - garage-data:/var/lib/garage/data
+
 volumes:
+  garage-meta:
+  garage-data:
   db-data:
   redis-data:

@@ -9,6 +9,7 @@ import { HealthModule } from './health/health.module';
 import { ListingsModule } from './listings/listings.module';
 import { PhotosModule } from './photos/photos.module';
 import { MailModule } from './mail/mail.module';
+import { QueueModule } from './queue/queue.module';
 import { RedisModule } from './redis/redis.module';
 import { StorageModule } from './storage/storage.module';
 import { UsersModule } from './users/users.module';
@@ -25,6 +26,7 @@ import { UsersModule } from './users/users.module';
       }),
     }),
     RedisModule,
+    QueueModule,
     RateLimitModule,
     MailModule,
     StorageModule,

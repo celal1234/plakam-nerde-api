@@ -1,6 +1,6 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { GetObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { ApiError } from '../common/errors/api-error';
 
@@ -32,6 +32,19 @@ export class StorageService {
 
   async presignGet(key: string, expiresIn = 900): Promise<string> {
     return getSignedUrl(this.s3(), new GetObjectCommand({ Bucket: this.bucket, Key: key }), { expiresIn });
+  }
+
+  async get(key: string): Promise<Buffer> {
+    const res = await this.s3().send(new GetObjectCommand({ Bucket: this.bucket, Key: key }));
+    return Buffer.from(await res.Body!.transformToByteArray());
+  }
+
+  async put(key: string, body: Buffer, contentType: string): Promise<void> {
+    await this.s3().send(new PutObjectCommand({ Bucket: this.bucket, Key: key, Body: body, ContentType: contentType }));
+  }
+
+  async delete(key: string): Promise<void> {
+    await this.s3().send(new DeleteObjectCommand({ Bucket: this.bucket, Key: key }));
   }
 
   private s3(): S3Client {
