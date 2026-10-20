@@ -49,7 +49,11 @@ Fotoğraf akışı: `POST /photos/upload-url` → telefon dosyayı imzalı adres
 | `GET /plates/{id}` · `PATCH /plates/{id}` (`If-Match: <version>`) | Kesin konum hiçbir herkese açık yanıtta yok |
 | `POST /plates/{id}/extend` · `/close` · `/handover` · `GET /me/listings` | Tek uzatma, süre dolduktan en geç 30 gün sonra |
 
-Henüz yok: Google/Apple girişi, telefon (`/me/phone`), cihaz token'ı (`/me/devices`), sızmış şifre kontrolü, zamanlanmış işler (süre dolumu şimdilik sorgu anında hesaplanıyor), teslim onayı, plaka alarmı.
+| `POST/GET /conversations` · `GET/POST /conversations/{id}/messages` · `POST /conversations/{id}/read` | Aynı ilana ikinci başlatma aynı konuşmayı döner; `clientId` ile tekrar gönderim çift kayıt açmaz; konumu yalnızca ilan sahibi paylaşır; dakikada 20 mesaj, günde 20 yeni konuşma |
+| `POST /users/{id}/block` | İki yönde de yazışmayı kapatır |
+| `wss://…/api/v1/ws` | İlk mesaj `{"type":"auth","token":"<access JWT>"}`; yanıt `{"type":"ready"}`. Olaylar: `message.new`, `message.read`. Kopunca `GET …/messages?after=<sonId>` ile eşitlenir |
+
+Henüz yok: push bildirimi (FCM), teslim onayı (`/plates/{id}/handover-confirm`), Google/Apple girişi, telefon (`/me/phone`), cihaz token'ı (`/me/devices`), sızmış şifre kontrolü, zamanlanmış işler (süre dolumu şimdilik sorgu anında hesaplanıyor), teslim onayı, plaka alarmı.
 
 ## Yapı
 
