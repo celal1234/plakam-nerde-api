@@ -6,8 +6,11 @@ import { dataSourceOptions } from './database/data-source';
 import { AuthModule } from './auth/auth.module';
 import { RateLimitModule } from './common/rate-limit/rate-limit.module';
 import { HealthModule } from './health/health.module';
+import { ListingsModule } from './listings/listings.module';
+import { PhotosModule } from './photos/photos.module';
 import { MailModule } from './mail/mail.module';
 import { RedisModule } from './redis/redis.module';
+import { StorageModule } from './storage/storage.module';
 import { UsersModule } from './users/users.module';
 
 @Module({
@@ -24,9 +27,12 @@ import { UsersModule } from './users/users.module';
     RedisModule,
     RateLimitModule,
     MailModule,
+    StorageModule,
     HealthModule,
     AuthModule,
     UsersModule,
+    PhotosModule,
+    ListingsModule,
   ],
 })
 export class AppModule {}
