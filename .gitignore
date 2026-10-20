@@ -4,3 +4,4 @@ coverage/
 .env
 *.tsbuildinfo
 dump.rdb
+.claude/settings.local.json

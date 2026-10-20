@@ -12,7 +12,7 @@
   "variable": [
     { "key": "baseUrl", "value": "https://plakam-api.danceschoolapp.com/api/v1" },
     { "key": "email", "value": "celal.baltaciii@gmail.com" },
-    { "key": "password", "value": "CelalAdmin2026!" },
+    { "key": "password", "value": "" },
     { "key": "accessToken", "value": "" },
     { "key": "refreshToken", "value": "" },
     { "key": "adminAccessToken", "value": "" },
