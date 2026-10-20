@@ -1,6 +1,9 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
+import { DataCipher } from '../common/crypto/data-cipher';
 import { ApiError } from '../common/errors/api-error';
+import { normalizePhone } from '../common/phone/phone';
+import { RateLimiter } from '../common/rate-limit/rate-limiter.service';
 import { NotificationPrefsDto, UpdateMeDto } from './users.dto';
 
 export interface Me {
@@ -16,7 +19,11 @@ export interface Me {
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly db: DataSource) {}
+  constructor(
+    private readonly db: DataSource,
+    private readonly cipher: DataCipher,
+    private readonly limiter: RateLimiter,
+  ) {}
 
   async me(userId: string): Promise<Me> {
     const [row] = await this.db.query(
@@ -38,6 +45,31 @@ export class UsersService {
       ]);
     }
     return this.me(userId);
+  }
+
+  // FR-036: numara şifreli saklanır (NFR-006); kullanıcıya yalnızca son 4 hane döner (T6 §3).
+  async phone(userId: string) {
+    const [row]: { last4: string }[] = await this.db.query(`SELECT phone_last4 AS last4 FROM user_private WHERE user_id = $1`, [
+      userId,
+    ]);
+    return { last4: row?.last4 ?? null };
+  }
+
+  async setPhone(userId: string, input: string) {
+    const phone = normalizePhone(input);
+    if (!phone) throw new ApiError(HttpStatus.BAD_REQUEST, 'PHONE_INVALID', 'Geçerli bir Türkiye telefon numarası girin.');
+    await this.limiter.consume(`phone-set:${userId}`, 10, 86400);
+    await this.db.query(
+      `INSERT INTO user_private (user_id, phone_enc, phone_last4) VALUES ($1, $2, $3)
+       ON CONFLICT (user_id) DO UPDATE SET phone_enc = EXCLUDED.phone_enc, phone_last4 = EXCLUDED.phone_last4`,
+      [userId, this.cipher.encrypt(phone), phone.slice(-4)],
+    );
+    return { last4: phone.slice(-4) };
+  }
+
+  // Numara silinince "telefonum görünsün" seçili ilanlarda da artık gösterilmez.
+  async deletePhone(userId: string): Promise<void> {
+    await this.db.query(`UPDATE user_private SET phone_enc = NULL, phone_last4 = NULL WHERE user_id = $1`, [userId]);
   }
 
   async notificationPrefs(userId: string) {

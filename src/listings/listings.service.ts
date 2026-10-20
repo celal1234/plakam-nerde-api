@@ -4,6 +4,7 @@ import { DataSource, EntityManager } from 'typeorm';
 import { AuthUser } from '../auth/auth.decorators';
 import { ApiError } from '../common/errors/api-error';
 import { normalizePlate } from '../common/plate/plate';
+import { DataCipher } from '../common/crypto/data-cipher';
 import { RateLimiter } from '../common/rate-limit/rate-limiter.service';
 import { assertCanWrite } from '../common/restriction';
 import { PHOTOS, PhotoJob } from '../queue/queue.module';
@@ -49,6 +50,7 @@ interface DetailRow extends CardRow {
   version: number;
   ownerDisplayName: string;
   photoKeys: string[];
+  hasPhone: boolean;
 }
 
 interface OwnedRow {
@@ -71,6 +73,7 @@ export class ListingsService {
     private readonly storage: StorageService,
     @Inject(PHOTOS) private readonly photoQueue: Queue<PhotoJob>,
     private readonly realtime: RealtimeService,
+    private readonly cipher: DataCipher,
   ) {}
 
   async search(q: string, ip: string) {
@@ -283,6 +286,24 @@ export class ListingsService {
     return result;
   }
 
+  // FR-038/039: numara yalnızca sahibi "telefonum görünsün" dediyse, aktif ilanda ve giriş yapmış kullanıcıya verilir.
+  // Toplu toplamayı zorlaştırmak için kullanıcı başına günde 20 numara; engellenmiş kullanıcıya hiç verilmez.
+  async phone(user: AuthUser, id: string) {
+    const [row]: { owner_id: string; phone_enc: Buffer | null; blocked: boolean }[] = await this.db.query(
+      `SELECT l.owner_id, up.phone_enc,
+              EXISTS (SELECT 1 FROM blocks b WHERE (b.blocker_id = l.owner_id AND b.blocked_id = $2)
+                                              OR (b.blocker_id = $2 AND b.blocked_id = l.owner_id)) AS blocked
+       FROM listings l LEFT JOIN user_private up ON up.user_id = l.owner_id
+       WHERE l.id = $1 AND l.show_phone AND ${EFFECTIVE_STATUS} = 'active' AND NOT l.hidden_by_reports`,
+      [id, user.id],
+    );
+    if (!row?.phone_enc || row.blocked) {
+      throw new ApiError(HttpStatus.NOT_FOUND, 'PHONE_NOT_AVAILABLE', 'Bu ilan için telefon numarası paylaşılmıyor.');
+    }
+    if (row.owner_id !== user.id) await this.limiter.consume(`phone-view:${user.id}`, 20, 86400);
+    return { phone: this.cipher.decrypt(row.phone_enc) };
+  }
+
   // FR-069: teslim konuşmasının arayan tarafı 7 gün içinde bir kez yanıtlar. "Hayır" yönetici incelemesine düşer.
   async confirmHandover(user: AuthUser, id: string, confirmed: boolean) {
     return this.db.transaction(async (tx) => {
@@ -331,7 +352,8 @@ export class ListingsService {
               l.expires_at AS "expiresAt", l.created_at AS "createdAt", l.is_official_plate AS "isOfficialPlate",
               l.plate_format_ok AS "plateFormatOk", l.handover_confirmed AS "handoverConfirmed",
               l.extended_at IS NOT NULL AS extended, l.version, u.display_name AS "ownerDisplayName",
-              ARRAY(SELECT p.storage_key FROM photos p WHERE p.listing_id = l.id AND p.thumb_key IS NOT NULL ORDER BY p.position) AS "photoKeys"
+              ARRAY(SELECT p.storage_key FROM photos p WHERE p.listing_id = l.id AND p.thumb_key IS NOT NULL ORDER BY p.position) AS "photoKeys",
+              (l.show_phone AND ${EFFECTIVE_STATUS} = 'active' AND EXISTS (SELECT 1 FROM user_private up WHERE up.user_id = l.owner_id AND up.phone_enc IS NOT NULL)) AS "hasPhone"
        FROM listings l JOIN users u ON u.id = l.owner_id
        WHERE l.id = $1 ${publicOnly ? `AND l.status NOT IN ('pending', 'removed') AND NOT l.hidden_by_reports` : ''}`,
       [id],
@@ -420,6 +442,8 @@ export class ListingsService {
       extended: r.extended,
       version: r.version,
       owner: { displayName: r.ownerDisplayName },
+      // Numaranın kendisi detayda yok; giriş yapmış kullanıcı `GET /plates/{id}/phone` ile ister (FR-039).
+      hasPhone: r.hasPhone,
       // Yalnızca işlenmiş (EXIF'i silinmiş) fotoğraflar; işlenmemiş orijinal asla dışarı verilmez.
       photoUrls: await Promise.all(r.photoKeys.map((k) => this.storage.presignGet(k))),
     };

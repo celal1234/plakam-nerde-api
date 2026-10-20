@@ -45,6 +45,11 @@ export class ListingsController {
     return this.listings.detail(id);
   }
 
+  @Get('plates/:id/phone')
+  phone(@CurrentUser() user: AuthUser, @Param('id', listingId) id: string) {
+    return this.listings.phone(user, id);
+  }
+
   @Patch('plates/:id')
   update(
     @CurrentUser() user: AuthUser,

@@ -44,10 +44,12 @@ Fotoğraf akışı: `POST /photos/upload-url` → telefon dosyayı imzalı adres
 | `POST /auth/login` · `/auth/refresh` · `/auth/logout` | Access JWT 15 dk; refresh 30 gün, her kullanımda yenilenir, tekrar kullanılırsa tüm zincir iptal |
 | `POST /auth/password/forgot` · `/auth/password/reset` | Sıfırlama tüm oturumları kapatır |
 | `GET/PATCH/DELETE /me` · `GET/PATCH /me/notification-prefs` | Silme kimlik bilgilerini hemen anonimleştirir |
+| `GET/PATCH/DELETE /me/phone` | İsteğe bağlı Türkiye numarası (`0532…`, `+90 532…` kabul edilir). AES-256-GCM ile şifreli saklanır, yanıtta yalnız son 4 hane. `DATA_ENCRYPTION_KEY` gerekir |
 | `POST /photos/upload-url` | 5 dk geçerli imzalı S3 yükleme adresi; JPEG/PNG (HEIC'i uygulama yüklemeden önce JPEG'e çevirir), en fazla 10 MB |
 | `GET /plates/search?q=` | Üyeliksiz; IP başına dakikada 20; aktifler önce |
 | `POST /plates` · `POST /plates/check-duplicate` | Yaklaşık konum 200–500 m kaydırılır; 2 km içinde aynı plaka uyarısı; resmî plaka onaya düşer |
-| `GET /plates/{id}` · `PATCH /plates/{id}` (`If-Match: <version>`) | Kesin konum hiçbir herkese açık yanıtta yok |
+| `GET /plates/{id}` · `PATCH /plates/{id}` (`If-Match: <version>`) | Kesin konum hiçbir herkese açık yanıtta yok. Numara detayda yok, yalnız `hasPhone` |
+| `GET /plates/{id}/phone` | Giriş gerekir. İlan sahibi "telefonum görünsün" demişse ve ilan aktifse numarayı verir; kullanıcı başına günde 20, engelleşen kullanıcılara verilmez |
 | `POST /plates/{id}/extend` · `/close` · `/handover` · `GET /me/listings` | Tek uzatma, süre dolduktan en geç 30 gün sonra |
 | `POST/GET /conversations` · `GET/POST /conversations/{id}/messages` · `POST /conversations/{id}/read` | Aynı ilana ikinci başlatma aynı konuşmayı döner; `clientId` ile tekrar gönderim çift kayıt açmaz; konumu yalnızca ilan sahibi paylaşır; dakikada 20 mesaj, günde 20 yeni konuşma |
 | `POST /plates/{id}/handover-confirm` | Teslim konuşmasının arayan tarafı 7 gün içinde bir kez; "hayır" yönetici incelemesine düşer |
@@ -73,7 +75,7 @@ Hepsi yönetici rolü **ve** MFA'lı oturum ister (yoksa 403 `ADMIN_ONLY` / `ADM
 
 Panel arayüzü ayrı bir web işi; ayrı alt alan adında (`admin.<alan-adı>`) yayınlanması ve `CORS_ORIGINS`'e eklenmesi yeterli.
 
-Henüz yok: push bildirimi (FCM), Google/Apple girişi, telefon (`/me/phone`), cihaz token'ı (`/me/devices`), sızmış şifre kontrolü, plaka alarmı.
+Henüz yok: push bildirimi (FCM), Google/Apple girişi, cihaz token'ı (`/me/devices`), sızmış şifre kontrolü, plaka alarmı.
 
 ## Yapı
 
