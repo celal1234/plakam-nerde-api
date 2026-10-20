@@ -1,0 +1,232 @@
+{
+  "info": {
+    "name": "Plakam Nerde API (Canlı Sunucu)",
+    "_postman_id": "plakam-nerde-api-prod",
+    "description": "Plakam Nerde? Canlı API uçlarını test etmek için hazır Postman koleksiyonu.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "https://plakam-api.danceschoolapp.com/api/v1" },
+    { "key": "email", "value": "celal.baltaciii@gmail.com" },
+    { "key": "password", "value": "CelalAdmin2026!" },
+    { "key": "accessToken", "value": "" },
+    { "key": "refreshToken", "value": "" },
+    { "key": "adminAccessToken", "value": "" },
+    { "key": "mfaCode", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "1. Genel Sağlık (Health)",
+      "request": {
+        "auth": { "type": "noauth" },
+        "method": "GET",
+        "url": "{{baseUrl}}/health"
+      }
+    },
+    {
+      "name": "2. Kimlik Doğrulama (Auth)",
+      "item": [
+        {
+          "name": "Login (Giriş Yap - Otomatik Token Kaydeder)",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "type": "text/javascript",
+              "exec": [
+                "const j = pm.response.json();",
+                "if (j.accessToken) {",
+                "    pm.collectionVariables.set('accessToken', j.accessToken);",
+                "    console.log('Access token kaydedildi');",
+                "}",
+                "if (j.refreshToken) {",
+                "    pm.collectionVariables.set('refreshToken', j.refreshToken);",
+                "}"
+              ]
+            }
+          }],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "type": "text/javascript",
+              "exec": [
+                "const j = pm.response.json();",
+                "if (j.accessToken) pm.collectionVariables.set('accessToken', j.accessToken);",
+                "if (j.refreshToken) pm.collectionVariables.set('refreshToken', j.refreshToken);"
+              ]
+            }
+          }],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/refresh",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/logout",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Kullanıcı Profili (Me)",
+      "item": [
+        {
+          "name": "Profilimi Getir (/me)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/me"
+          }
+        },
+        {
+          "name": "Bildirim Tercihleri",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/me/notification-prefs"
+          }
+        },
+        {
+          "name": "İlanlarım (/me/listings)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/me/listings"
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Plakalar ve Arama (Plates)",
+      "item": [
+        {
+          "name": "Plaka Ara (Search)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/plates/search?q=34ABC123"
+          }
+        },
+        {
+          "name": "Mükerrer Plaka Kontrolü",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/plates/check-duplicate",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"plate\": \"34ABC123\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Fotoğraf Yükleme (S3 Storage)",
+      "item": [
+        {
+          "name": "İmzalı Yükleme Adresi Al (/photos/upload-url)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/photos/upload-url",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mime\": \"image/jpeg\",\n  \"bytes\": 102400\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Mesajlaşma (Conversations)",
+      "item": [
+        {
+          "name": "Konuşmaları Listele",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/conversations"
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Yönetici Paneli (Admin)",
+      "item": [
+        {
+          "name": "1. Admin MFA Doğrula (TOTP Kodu ile)",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "type": "text/javascript",
+              "exec": [
+                "const j = pm.response.json();",
+                "if (j.accessToken) {",
+                "    pm.collectionVariables.set('accessToken', j.accessToken);",
+                "    console.log('MFA onaylı admin token kaydedildi');",
+                "}"
+              ]
+            }
+          }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/admin/mfa/verify",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"{{mfaCode}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "2. Sistem Metrikleri (Admin Metrics)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/admin/metrics"
+          }
+        },
+        {
+          "name": "3. Tüm İlanları Listele (Admin Listings)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/admin/listings"
+          }
+        },
+        {
+          "name": "4. Şikayetler (Admin Reports)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/admin/reports"
+          }
+        }
+      ]
+    }
+  ]
+}
