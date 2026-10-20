@@ -1,4 +1,5 @@
-import { Body, Controller, HttpCode, HttpStatus, Ip, Post } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Ip, Post, Req, Res } from '@nestjs/common';
+import type { Request, Response } from 'express';
 import { AuthUser, CurrentUser, Public } from './auth.decorators';
 import {
   ForgotPasswordDto,
@@ -8,9 +9,10 @@ import {
   RegisterResponse,
   ResetPasswordDto,
   TokenDto,
-  TokenPair,
+  TokenResponse,
 } from './auth.dto';
 import { AuthService } from './auth.service';
+import { clearRefreshCookie, refreshTokenFrom, sendTokens, TokenTransportHeader } from './refresh-cookie';
 
 @Controller('auth')
 export class AuthController {
@@ -40,22 +42,31 @@ export class AuthController {
   @Public()
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  login(@Body() dto: LoginDto, @Ip() ip: string): Promise<TokenPair> {
-    return this.auth.login(dto, ip);
+  @TokenTransportHeader()
+  async login(
+    @Body() dto: LoginDto,
+    @Ip() ip: string,
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<TokenResponse> {
+    return sendTokens(req, res, await this.auth.login(dto, ip));
   }
 
   @Public()
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
-  refresh(@Body() dto: RefreshDto): Promise<TokenPair> {
-    return this.auth.refresh(dto.refreshToken);
+  @TokenTransportHeader()
+  async refresh(@Body() dto: RefreshDto, @Req() req: Request, @Res({ passthrough: true }) res: Response): Promise<TokenResponse> {
+    return sendTokens(req, res, await this.auth.refresh(refreshTokenFrom(req, dto.refreshToken)));
   }
 
   @Public()
   @Post('logout')
   @HttpCode(HttpStatus.NO_CONTENT)
-  logout(@Body() dto: RefreshDto): Promise<void> {
-    return this.auth.logout(dto.refreshToken);
+  @TokenTransportHeader()
+  async logout(@Body() dto: RefreshDto, @Req() req: Request, @Res({ passthrough: true }) res: Response): Promise<void> {
+    await this.auth.logout(refreshTokenFrom(req, dto.refreshToken));
+    clearRefreshCookie(req, res);
   }
 
   @Public()

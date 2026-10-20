@@ -349,7 +349,20 @@
     "/api/v1/auth/login": {
       "post": {
         "operationId": "AuthController_login",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "X-Token-Transport",
+            "in": "header",
+            "description": "Tarayıcıda `cookie`: refresh token gövde yerine httpOnly cookie ile taşınır",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "cookie"
+              ]
+            }
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -366,7 +379,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TokenPair"
+                  "$ref": "#/components/schemas/TokenResponse"
                 }
               }
             }
@@ -390,7 +403,20 @@
     "/api/v1/auth/refresh": {
       "post": {
         "operationId": "AuthController_refresh",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "X-Token-Transport",
+            "in": "header",
+            "description": "Tarayıcıda `cookie`: refresh token gövde yerine httpOnly cookie ile taşınır",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "cookie"
+              ]
+            }
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -407,7 +433,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TokenPair"
+                  "$ref": "#/components/schemas/TokenResponse"
                 }
               }
             }
@@ -431,7 +457,20 @@
     "/api/v1/auth/logout": {
       "post": {
         "operationId": "AuthController_logout",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "X-Token-Transport",
+            "in": "header",
+            "description": "Tarayıcıda `cookie`: refresh token gövde yerine httpOnly cookie ile taşınır",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "cookie"
+              ]
+            }
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1762,7 +1801,20 @@
     "/api/v1/admin/mfa/verify": {
       "post": {
         "operationId": "AdminMfaController_verify",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "X-Token-Transport",
+            "in": "header",
+            "description": "Tarayıcıda `cookie`: refresh token gövde yerine httpOnly cookie ile taşınır",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "cookie"
+              ]
+            }
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1779,7 +1831,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TokenPair"
+                  "$ref": "#/components/schemas/TokenResponse"
                 }
               }
             }
@@ -2510,7 +2562,7 @@
           "password"
         ]
       },
-      "TokenPair": {
+      "TokenResponse": {
         "type": "object",
         "properties": {
           "accessToken": {
@@ -2521,8 +2573,7 @@
           }
         },
         "required": [
-          "accessToken",
-          "refreshToken"
+          "accessToken"
         ]
       },
       "RefreshDto": {
@@ -2532,10 +2583,7 @@
             "type": "string",
             "maxLength": 200
           }
-        },
-        "required": [
-          "refreshToken"
-        ]
+        }
       },
       "ForgotPasswordDto": {
         "type": "object",

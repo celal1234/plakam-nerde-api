@@ -1,5 +1,5 @@
 import { Transform } from 'class-transformer';
-import { IsEmail, IsNotEmpty, IsString, MaxLength, MinLength } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 
 const trimLower = ({ value }: { value: unknown }) => (typeof value === 'string' ? value.trim().toLowerCase() : value);
 const trim = ({ value }: { value: unknown }) => (typeof value === 'string' ? value.trim() : value);
@@ -21,8 +21,9 @@ export class TokenDto {
   @IsString() @IsNotEmpty() @MaxLength(200) token: string;
 }
 
+// Tarayıcıda (`X-Token-Transport: cookie`) gövde boş gelir, token cookie'den okunur.
 export class RefreshDto {
-  @IsString() @IsNotEmpty() @MaxLength(200) refreshToken: string;
+  @IsOptional() @IsString() @IsNotEmpty() @MaxLength(200) refreshToken?: string;
 }
 
 export class ForgotPasswordDto {
@@ -39,6 +40,12 @@ export class TokenPair {
   accessToken: string;
   // 30 gün geçerli, tek kullanımlık; her yenilemede yenisi döner.
   refreshToken: string;
+}
+
+export class TokenResponse {
+  accessToken: string;
+  // `X-Token-Transport: cookie` isteğinde yer almaz; httpOnly cookie ile gelir.
+  refreshToken?: string;
 }
 
 export class RegisterResponse {

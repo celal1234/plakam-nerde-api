@@ -1,6 +1,8 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Ip, Param, ParseUUIDPipe, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Ip, Param, ParseUUIDPipe, Post, Query, Req, Res } from '@nestjs/common';
+import type { Request, Response } from 'express';
 import { AdminOnly, AuthUser, CurrentUser } from '../auth/auth.decorators';
-import { TokenPair } from '../auth/auth.dto';
+import { TokenResponse } from '../auth/auth.dto';
+import { sendTokens, TokenTransportHeader } from '../auth/refresh-cookie';
 import { LatLng } from '../common/dto/shared.dto';
 import {
   AdminListingDetail,
@@ -39,8 +41,15 @@ export class AdminMfaController {
   // Başarılı doğrulama MFA işaretli yeni bir token çifti döndürür; panel eski refresh token'ı bırakır.
   @Post('verify')
   @HttpCode(HttpStatus.OK)
-  verify(@CurrentUser() user: AuthUser, @Body() dto: MfaCodeDto, @Ip() ip: string): Promise<TokenPair> {
-    return this.admin.mfaVerify(user, dto.code, ip);
+  @TokenTransportHeader()
+  async verify(
+    @CurrentUser() user: AuthUser,
+    @Body() dto: MfaCodeDto,
+    @Ip() ip: string,
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<TokenResponse> {
+    return sendTokens(req, res, await this.admin.mfaVerify(user, dto.code, ip));
   }
 }
 

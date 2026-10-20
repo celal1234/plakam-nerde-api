@@ -41,7 +41,7 @@ Fotoğraf akışı: `POST /photos/upload-url` → telefon dosyayı imzalı adres
 |---|---|
 | `GET /health` | Veritabanı bağlantısı |
 | `POST /auth/register` · `/auth/verify-email` · `/auth/verify-email/resend` | Kayıt her durumda aynı yanıtı verir (e-posta varlığı sızmaz) |
-| `POST /auth/login` · `/auth/refresh` · `/auth/logout` | Access JWT 15 dk; refresh 30 gün, her kullanımda yenilenir, tekrar kullanılırsa tüm zincir iptal |
+| `POST /auth/login` · `/auth/refresh` · `/auth/logout` | Access JWT 15 dk; refresh 30 gün, her kullanımda yenilenir, tekrar kullanılırsa tüm zincir iptal. Tarayıcı `X-Token-Transport: cookie` gönderir (`credentials: 'include'` ile): refresh token gövdede dönmez, `refresh_token` httpOnly cookie'sinde (`Secure`, `SameSite=Strict`, `Path=/api/v1/auth`) taşınır; refresh/logout gövdesiz çağrılır. Cookie başlık olmadan okunmaz (CSRF). Mobil gövdeyle devam eder |
 | `POST /auth/password/forgot` · `/auth/password/reset` | Sıfırlama tüm oturumları kapatır |
 | `GET/PATCH/DELETE /me` · `GET/PATCH /me/notification-prefs` | Silme kimlik bilgilerini hemen anonimleştirir |
 | `GET/PATCH/DELETE /me/phone` | İsteğe bağlı Türkiye numarası (`0532…`, `+90 532…` kabul edilir). AES-256-GCM ile şifreli saklanır, yanıtta yalnız son 4 hane. `DATA_ENCRYPTION_KEY` gerekir |
@@ -66,7 +66,7 @@ Hepsi yönetici rolü **ve** MFA'lı oturum ister (yoksa 403 `ADMIN_ONLY` / `ADM
 
 | Uç | Not |
 |---|---|
-| `POST /admin/mfa/setup` · `POST /admin/mfa/verify` `{code}` | Yalnız rol yeterli. Kurulum 10 dk içinde doğrulanmalı; doğrulama MFA'lı yeni token çifti döner; aynı kod iki kez geçmez; 5 dakikada 5 deneme |
+| `POST /admin/mfa/setup` · `POST /admin/mfa/verify` `{code}` | Yalnız rol yeterli. Kurulum 10 dk içinde doğrulanmalı; doğrulama MFA'lı yeni token çifti döner (panel `X-Token-Transport: cookie` ile cookie'ye yazdırır); aynı kod iki kez geçmez; 5 dakikada 5 deneme |
 | `GET /admin/listings?plate=&status=&city=&from=&to=&limit=&offset=` · `GET /admin/listings/{id}` | `status`: pending, active, handed_over, closed, expired, removed, hidden. Plaka baştan eşleşir. Ayrıntıda fotoğraflar ve şikâyetler |
 | `POST /admin/listings/{id}/approve` · `/reject` `{reason}` · `/remove` `{reason}` | Onayda süre o andan başlar. Ret/kaldırmada sebep sahibine e-postayla gider; kaldırılan ilanın konuşmaları salt okunur olur, açık şikâyetleri kapanır |
 | `GET /admin/reports?status=open` · `POST /admin/reports/{id}/resolve` `{action, days?, note?}` | `none` (gizleme eşiğin altına inerse kalkar), `remove_listing`, `restrict_user` (kullanıcı, ilan sahibi veya konuşmadaki karşı taraf) |
