@@ -14,7 +14,14 @@ export default defineConfig({
           name: 'e2e',
           include: ['test/**/*.e2e-spec.ts'],
           fileParallelism: false,
-          env: { JWT_SECRET: 'e2e-test-secret-e2e-test-secret-1234', APP_URL: 'https://plakamnerde.test' },
+          env: {
+            JWT_SECRET: 'e2e-test-secret-e2e-test-secret-1234',
+            APP_URL: 'https://plakamnerde.test',
+            // İmzalı adres üretimi çevrimdışı çalışır; testler gerçek bir S3'e bağlanmaz.
+            S3_ENDPOINT: 'http://localhost:3900',
+            S3_ACCESS_KEY: 'test',
+            S3_SECRET_KEY: 'test',
+          },
         },
       },
     ],

@@ -32,8 +32,13 @@ Testler: `pnpm test` (birim), `pnpm test:e2e` (çalışan PostGIS + Redis ister)
 | `POST /auth/login` · `/auth/refresh` · `/auth/logout` | Access JWT 15 dk; refresh 30 gün, her kullanımda yenilenir, tekrar kullanılırsa tüm zincir iptal |
 | `POST /auth/password/forgot` · `/auth/password/reset` | Sıfırlama tüm oturumları kapatır |
 | `GET/PATCH/DELETE /me` · `GET/PATCH /me/notification-prefs` | Silme kimlik bilgilerini hemen anonimleştirir |
+| `POST /photos/upload-url` | 5 dk geçerli imzalı S3 yükleme adresi; JPEG/PNG/HEIC, en fazla 10 MB |
+| `GET /plates/search?q=` | Üyeliksiz; IP başına dakikada 20; aktifler önce |
+| `POST /plates` · `POST /plates/check-duplicate` | Yaklaşık konum 200–500 m kaydırılır; 2 km içinde aynı plaka uyarısı; resmî plaka onaya düşer |
+| `GET /plates/{id}` · `PATCH /plates/{id}` (`If-Match: <version>`) | Kesin konum hiçbir herkese açık yanıtta yok |
+| `POST /plates/{id}/extend` · `/close` · `/handover` · `GET /me/listings` | Tek uzatma, süre dolduktan en geç 30 gün sonra |
 
-Henüz yok: Google/Apple girişi, telefon (`/me/phone`), cihaz token'ı (`/me/devices`), sızmış şifre kontrolü.
+Henüz yok: Google/Apple girişi, telefon (`/me/phone`), cihaz token'ı (`/me/devices`), sızmış şifre kontrolü, fotoğraf işleme (EXIF silme, küçük resim; o zamana kadar `thumbUrl` null), zamanlanmış işler (süre dolumu şimdilik sorgu anında hesaplanıyor), teslim onayı, plaka alarmı.
 
 ## Yapı
 
