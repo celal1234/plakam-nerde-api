@@ -16,7 +16,8 @@
     "test": "vitest run --project unit",
     "test:e2e": "vitest run --project e2e",
     "migration:run": "typeorm migration:run -d dist/database/data-source.js",
-    "migration:revert": "typeorm migration:revert -d dist/database/data-source.js"
+    "migration:revert": "typeorm migration:revert -d dist/database/data-source.js",
+    "admin": "node dist/cli/admin.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1153.0",

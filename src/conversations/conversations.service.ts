@@ -2,6 +2,7 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { DataSource, EntityManager } from 'typeorm';
 import { AuthUser } from '../auth/auth.decorators';
 import { ApiError } from '../common/errors/api-error';
+import { assertCanWrite } from '../common/restriction';
 import { RateLimiter } from '../common/rate-limit/rate-limiter.service';
 import { RealtimeService } from '../realtime/realtime.service';
 import { MessagesQueryDto, SendMessageDto, StartConversationDto } from './conversations.dto';
@@ -46,7 +47,7 @@ export class ConversationsService {
 
   // AC-13: oturumsuz kullanıcı buraya ulaşamaz (401), istemci girişe yönlendirir.
   async start(user: AuthUser, dto: StartConversationDto) {
-    await this.assertCanWrite(user.id);
+    await assertCanWrite(this.db, user.id);
     const [listing]: { owner_id: string; active: boolean }[] = await this.db.query(
       `SELECT owner_id, (status = 'active' AND expires_at > now() AND NOT hidden_by_reports) AS active
        FROM listings WHERE id = $1`,
@@ -112,7 +113,7 @@ export class ConversationsService {
   }
 
   async send(user: AuthUser, conversationId: string, dto: SendMessageDto): Promise<Message> {
-    await this.assertCanWrite(user.id);
+    await assertCanWrite(this.db, user.id);
     const conv = await this.loadAsParty(this.db.manager, user.id, conversationId);
     if (conv.read_only) throw forbidden();
     // Teslimden sonra da taraflar buluşmayı ayarlayabilsin diye `handed_over` ilanda yazışma açık kalır.
@@ -219,18 +220,6 @@ export class ConversationsService {
       [a, b],
     );
     if (row) throw new ApiError(HttpStatus.FORBIDDEN, 'USER_BLOCKED', 'Bu kullanıcıyla mesajlaşamazsınız.');
-  }
-
-  // FR-055: kısıtlanmış kullanıcı kısıt süresince yazamaz.
-  private async assertCanWrite(userId: string): Promise<void> {
-    const [u]: { restricted: boolean }[] = await this.db.query(
-      `SELECT status = 'banned' OR (status = 'restricted' AND (restricted_until IS NULL OR restricted_until > now())) AS restricted
-       FROM users WHERE id = $1`,
-      [userId],
-    );
-    if (!u || u.restricted) {
-      throw new ApiError(HttpStatus.FORBIDDEN, 'USER_RESTRICTED', 'Hesabınız geçici olarak kısıtlandı.');
-    }
   }
 
   private async summary(userId: string, conversationId: string) {
